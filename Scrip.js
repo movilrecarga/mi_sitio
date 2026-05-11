@@ -59,7 +59,7 @@
             return;
         }
         let featuresText = plan.features.join(', ');
-        let message = `Hola, quiero solicitar el plan *${plan.name}* para recargar.%0A%0A`;
+        let message = `Hola, quiero solicitar el *${plan.name}* para recargar.%0A%0A`;
         message += `📱 *Número a recargar:* ${phone}%0A`;
         message += `💰 *Precio del plan:* ${plan.price}%0A`;
         message += `📋 *Beneficios:* ${featuresText}%0A`;

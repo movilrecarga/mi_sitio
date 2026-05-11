@@ -1,8 +1,8 @@
     // ---------- Datos de los planes ----------
     const plansData = [
-       { name: "Plan Básico", price: "$400 CUP", features: ["2 GB de datos", "15 minutos de voz", "20 SMS"], validity: "35 días", badge: "Más económico", icon: "📱" },
-       { name: "Plan Medio", price: "$800 CUP", features: ["4 GB de datos", "35 minutos de voz", "40 SMS"], validity: "35 días", badge: "Más vendido", icon: "🔥" },
-        { name: "Plan Especial", price: "$1200 CUP", features: ["6 GB de datos", "60 minutos de voz", "70 SMS"], validity: "35 días", badge: "Recomendado", icon: "⭐" },
+       { name: "Plan Básico", price: "$400 CUP", features: ["2 GB de datos", "15 minutos de voz", "20 SMS", "Comprar_Pkt:*133*1*4*2*1#"], validity: "35 días", badge: "Más económico", icon: "📱" },
+       { name: "Plan Medio", price: "$800 CUP", features: ["4 GB de datos", "35 minutos de voz", "40 SMS", "Comprar_Pkt:*133*1*4*3*1#"], validity: "35 días", badge: "Más vendido", icon: "🔥" },
+        { name: "Plan Especial", price: "$1200 CUP", features: ["6 GB de datos", "60 minutos de voz", "70 SMS", "Comprar_Pkt:*133*1*4*4*1#"], validity: "35 días", badge: "Recomendado", icon: "⭐" },
     //    { name: "Plan Epico", price: "$500 UYU", features: ["14 GB de datos", "160 minutos de voz","180 SMS"], validity: "35 días", badge: "Más Popular", icon: "⭐ " },
     //  { name: "Plan Legendario", price: "$1000 UYU", features: ["28 GB de datos", "320 minutos de voz","360 SMS"], validity: "35 días", badge: "Más Popular", icon: "⭐ " },
       
@@ -59,11 +59,13 @@
             return;
         }
         let featuresText = plan.features.join(', ');
-        let message = `Hola, quiero solicitar el *${plan.name}* para recargar.%0A%0A`;
+        let message = `Hola, quiero solicitar el plan *${plan.name}* para recargar.%0A%0A`;
         message += `📱 *Número a recargar:* ${phone}%0A`;
         message += `💰 *Precio del plan:* ${plan.price}%0A`;
         message += `📋 *Beneficios:* ${featuresText}%0A`;
         message += `⏳ *Vigencia:* ${plan.validity}%0A%0A`;
+        message += `🏆 Compra_Pkt:* ${plan.validity}%0A%0A`;
+        
         message += `Quedo atento a los pasos de pago.`;
         const whatsappNumber = '5355462081'; // Cambia por tu número
         window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank');

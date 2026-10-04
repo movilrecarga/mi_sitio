@@ -1,117 +1,458 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-<title>Movil | Recargas Movil de Cuba</title>
-<link rel="stylesheet" href="estilo.css">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recargas Cuba UY — Enviá saldo a Cuba desde Uruguay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#34D399',
+                        dark: '#1F2937',
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        .card-selected {
+            border-color: #165DFF !important;
+            background-color: #EFF6FF;
+            box-shadow: 0 4px 12px rgba(22, 93, 255, 0.15);
+        }
+        .carrito-panel {
+            transform: translateX(0) !important;
+        }
+        input[type="radio"] { display: none; }
+        .metodo-label { cursor: pointer; transition: all 0.2s; }
+    </style>
 </head>
-<body>
-<div class="top-bar">
-<div class="container">
-<div class="header">
-<div class="logo">📱 Movil Recargas</div>
-<div class="nav-menu">
-<button class="menu-toggle" id="menuToggle">☰</button>
-<ul class="nav-list" id="navList">
-<li><a href="#inicio">Inicio</a></li>
-<li><a href="#planes">Planes</a></li>
-<li><a href="#como-funciona">Cómo funciona</a></li>
-<li><a href="#testimonios">Testimonios</a></li>
-<li><a href="#faq">FAQ</a></li>
-<li><a href="#contacto">Contacto</a></li>
-</ul>
-</div>
-</div>
-<div class="schedule">🕒 8:00 AM - 10:00 PM · Todos los días</div>
-<div class="telefono">
-<label>📱 Número de teléfono a recargar</label>
-<input type="tel" id="phoneNumber" maxlength="8" placeholder="Ej: 51234567" required>
-<small style="color: #64748b;">Ingresa el número sin código de país.</small>
-  <div class="message" id="validationMessage"></div>
-</div>
-</div>
-</div>
-<main>
-<div class="container">
-<!-- Sección Inicio (Hero + formulario) -->
-<section id="inicio" style="scroll-margin-top: 200px;">
-<div class="hero">
-<div class="badge">🇨🇺 Servicio Exclusivo para Cuba</div>
+<body class="text-dark bg-white">
+    <!-- Navegación -->
+    <nav class="sticky top-0 bg-white shadow-sm z-50">
+        <div class="max-w-7xl mx-auto px-4 flex justify-between items-center py-4">
+            <a href="#" class="text-2xl font-bold text-primary">Recargas Cuba UY</a>
+            <div class="flex items-center gap-4">
+                <a href="#como-funciona" class="hidden md:inline hover:text-primary">Cómo funciona</a>
+                <button id="abrirCarrito" class="relative p-2 hover:bg-gray-100 rounded-full">
+                    <i class="fa fa-shopping-cart text-lg"></i>
+                    <span id="contadorCarrito" class="absolute -top-1 -right-1 bg-primary text-white text-xs w-5 h-5 flex items-center justify-center rounded-full hidden">0</span>
+                </button>
+            </div>
+        </div>
+    </nav>
 
-<p>La familia en Cuba, siempre conectada. Recarga de Saldo, Planes de Internet.</p>
-</div>
-</section>
+    <!-- Panel Carrito Lateral -->
+    <div id="overlayCarrito" class="fixed inset-0 bg-black/50 z-50 hidden"></div>
+    <div id="panelCarrito" class="fixed top-0 right-0 h-full w-full md:w-[420px] bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300">
+        <div class="h-full flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h2 class="text-xl font-bold">Tu Carrito 🛒</h2>
+                <button id="cerrarCarrito" class="text-gray-500 hover:text-black text-xl">&times;</button>
+            </div>
+            
+            <div id="contenidoCarrito" class="flex-1 overflow-y-auto p-4">
+                <div id="carritoVacio" class="text-center py-12 text-gray-500">
+                    <i class="fa fa-shopping-cart text-4xl mb-4 opacity-20"></i>
+                    <p>Tu carrito está vacío</p>
+                    <p class="text-sm mt-2">Seleccioná una recarga para empezar</p>
+                </div>
+                
+                <div id="listaCarrito" class="space-y-4 hidden"></div>
 
-<!-- Sección Planes -->
-<section id="planes" class="plans">
-<h2 class="section-title">📡 Planes de ETECSA</h2>
-<p class="section-sub">Selecciona un plan y envíalo por WhatsApp con el número que cargaste arriba.</p>
-<div class="plans-grid" id="plansGrid"></div>
-</section>
+                <!-- Métodos de Pago (aparece cuando hay items) -->
+                <div id="seccionPago" class="hidden mt-6">
+                    <h3 class="font-semibold text-lg mb-3">💳 Método de Pago</h3>
+                    <div class="space-y-3">
+                        <label class="metodo-label block border-2 rounded-xl p-3" id="pago-prex">
+                            <input type="radio" name="metodoPago" value="Prex" checked>
+                            <div class="flex items-center gap-3">
+                                <span class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                                    <i class="fa fa-bolt"></i>
+                                </span>
+                                <div>
+                                    <div class="font-medium">Prex</div>
+                                    <div class="text-xs text-gray-500">Pago al instante</div>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="metodo-label block border-2 rounded-xl p-3" id="pago-midinero">
+                            <input type="radio" name="metodoPago" value="Mi Dinero">
+                            <div class="flex items-center gap-3">
+                                <span class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                                    <i class="fa fa-money"></i>
+                                </span>
+                                <div>
+                                    <div class="font-medium">Mi Dinero</div>
+                                    <div class="text-xs text-gray-500">Pago con cuenta o tarjeta</div>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="metodo-label block border-2 rounded-xl p-3" id="pago-brou">
+                            <input type="radio" name="metodoPago" value="BROU">
+                            <div class="flex items-center gap-3">
+                                <span class="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
+                                    <i class="fa fa-university"></i>
+                                </span>
+                                <div>
+                                    <div class="font-medium">Transferencia BROU</div>
+                                    <div class="text-xs text-gray-500">Desde cualquier banco</div>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="metodo-label block border-2 rounded-xl p-3" id="pago-efectivo">
+                            <input type="radio" name="metodoPago" value="Abitab / RedPagos">
+                            <div class="flex items-center gap-3">
+                                <span class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+                                    <i class="fa fa-building"></i>
+                                </span>
+                                <div>
+                                    <div class="font-medium">Abitab / RedPagos</div>
+                                    <div class="text-xs text-gray-500">En efectivo</div>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="pieCarrito" class="border-t p-4 hidden">
+                <div class="flex justify-between text-lg font-semibold mb-4">
+                    <span>Total a pagar</span>
+                    <span id="totalCarrito" class="text-primary text-xl">$ 0</span>
+                </div>
+                <button id="botonConfirmar" class="w-full bg-primary text-white py-3 rounded-lg font-medium hover:bg-primary/90 transition">
+                    ✅ Confirmar y Pagar
+                </button>
+            </div>
+        </div>
+    </div>
 
-<!-- Cómo funciona -->
-<section id="como-funciona" class="steps">
-<h2 class="section-title">¿Cómo Funciona?</h2>
-<p class="section-sub">Enviar recargas es fácil y rápido. Sigue estos 4 simples pasos</p>
-<div class="steps-grid">
-<div class="step-card"><div class="step-number">1</div><h3>Elige tu plan</h3><p>Selecciona el plan que necesita tu familia.</p></div>
-<div class="step-card"><div class="step-number">2</div><h3>Contacta por WhatsApp</h3><p>Haz clic en el botón de WhatsApp y proporciona el número a recargar.</p></div>
-<div class="step-card"><div class="step-number">3</div><h3>Realiza el pago</h3><p>Transfiere el monto a nuestra cuenta en Cuba y envía el comprobante.</p></div>
-<div class="step-card"><div class="step-number">4</div><h3>Confirmación inmediata</h3><p>Recibe la confirmación de entrega en 15 minutos a 1 hora.</p></div>
-</div>
-</section>
+    <!-- Hero / Formulario Principal -->
+    <section class="py-12 md:py-20 bg-gradient-to-b from-blue-50 to-white">
+        <div class="max-w-5xl mx-auto px-4">
+            <div class="text-center mb-10">
+                <h1 class="text-[clamp(1.8rem,4vw,3rem)] font-bold mb-4">
+                    Recargá celulares en Cuba desde Uruguay 🇺🇾 → 🇨🇺
+                </h1>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                    Saldo y datos para cualquier número Cubacel. Pagá en pesos uruguayos con Prex, Mi Dinero, transferencia o en efectivo.
+                </p>
+                <div class="flex flex-wrap justify-center gap-6 mt-6">
+                    <span class="flex items-center gap-2"><i class="fa fa-bolt text-primary"></i>Acreditación rápida</span>
+                    <span class="flex items-center gap-2"><i class="fa fa-undo text-primary"></i>Devolución garantizada</span>
+                    <span class="flex items-center gap-2"><i class="fa fa-whatsapp text-green-500"></i>Aviso por WhatsApp</span>
+                </div>
+            </div>
 
-<!-- Testimonios -->
-<section id="testimonios" class="section" style="background-color: #EFF6FF;">
-<div class="container">
-<h2 class="section-title">Lo que dicen nuestros clientes</h2>
-<div class="testimonial-grid">
-<div class="testimonial"><div class="stars">★★★★★</div><p>"Muy buena oferta, agradecida por la buena atención y la recarga llegó rápido."</p><strong>— Elisa M.</strong></div>
-<div class="testimonial"><div class="stars">★★★★★</div><p>"Un excelente servicio, rápido y confiable. </p></strong>— Norberto S., </strong></div>
-<div class="testimonial"><div class="stars">★★★★★</div><p>"La primera recarga fue muy rápida. Recomiendo 100% "</p><strong>— Adisle L.</strong></div>
+            <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8">
+                <form id="formRecarga" class="space-y-8">
+                    <!-- Paso 1: Número -->
+                    <div>
+                        <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
+                            <span class="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">1</span>
+                            Número en Cuba
+                        </h2>
+                        <div class="flex gap-3">
+                            <div class="w-20 flex-shrink-0">
+                                <label class="block text-sm text-gray-500 mb-1">País</label>
+                                <div class="border rounded-lg px-3 py-2.5 bg-gray-50 flex items-center gap-2">
+                                    <span>🇨🇺</span><span>+53</span>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-sm text-gray-500 mb-1">Celular Cubacel *</label>
+                                <input type="tel" id="numeroDestino" placeholder="5X XXX XXX" 
+                                    class="w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50" required>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <label class="block text-sm text-gray-500 mb-1">Nombre de quien recibe (opcional)</label>
+                            <input type="text" id="nombreDestino" placeholder="Ej: Abuela Marta" 
+                                class="w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50">
+                        </div>
+                    </div>
+
+                    <!-- Paso 2: Paquetes -->
+                    <div>
+                        <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
+                            <span class="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">2</span>
+                            Elegí la recarga
+                        </h2>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <label class="cursor-pointer block border-2 rounded-xl p-4 transition-all hover:border-primary/50 paquete-option">
+                                <input type="radio" name="paquete" value="basica" data-nombre="Recarga Básica" data-precio="490" data-detalle="500 CUP + 1 GB" class="hidden">
+                                <div class="font-medium">Básica</div>
+                                <div class="text-2xl font-bold text-primary mt-1">$ 490</div>
+                                <div class="text-gray-500 text-sm mt-2">500 CUP<br>1 GB datos</div>
+                            </label>
+                            <label class="cursor-pointer block border-2 rounded-xl p-4 transition-all hover:border-primary/50 paquete-option">
+                                <input type="radio" name="paquete" value="estandar" data-nombre="Recarga Estándar" data-precio="890" data-detalle="1.000 CUP + 4 GB" class="hidden" checked>
+                                <div class="font-medium">Estándar <span class="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full ml-1">Popular</span></div>
+                                <div class="text-2xl font-bold text-primary mt-1">$ 890</div>
+                                <div class="text-gray-500 text-sm mt-2">1.000 CUP<br>4 GB datos</div>
+                            </label>
+                            <label class="cursor-pointer block border-2 rounded-xl p-4 transition-all hover:border-primary/50 paquete-option">
+                                <input type="radio" name="paquete" value="plus" data-nombre="Recarga Plus" data-precio="1290" data-detalle="1.500 CUP + 8 GB" class="hidden">
+                                <div class="font-medium">Plus</div>
+                                <div class="text-2xl font-bold text-primary mt-1">$ 1.290</div>
+                                <div class="text-gray-500 text-sm mt-2">1.500 CUP<br>8 GB datos</div>
+                            </label>
+                            <label class="cursor-pointer block border-2 rounded-xl p-4 transition-all hover:border-primary/50 paquete-option">
+                                <input type="radio" name="paquete" value="premium" data-nombre="Recarga Premium" data-precio="1890" data-detalle="2.500 CUP + 14 GB" class="hidden">
+                                <div class="font-medium">Premium</div>
+                                <div class="text-2xl font-bold text-primary mt-1">$ 1.890</div>
+                                <div class="text-gray-500 text-sm mt-2">2.500 CUP<br>14 GB datos</div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Paso 3: Datos comprador -->
+                    <div>
+                        <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
+                            <span class="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">3</span>
+                            Tus datos
+                        </h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm text-gray-500 mb-1">Nombre completo *</label>
+                                <input type="text" id="compradorNombre" 
+                                    class="w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-500 mb-1">Email *</label>
+                                <input type="email" id="compradorEmail" 
+                                    class="w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50" required>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm text-gray-500 mb-1">Celular en Uruguay *</label>
+                                <input type="tel" id="compradorCelular" placeholder="09X XXX XXX" 
+                                    class="w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-secondary hover:bg-secondary/90 text-white font-medium py-3 rounded-lg transition-colors text-lg">
+                        <i class="fa fa-plus-circle mr-2"></i> Agregar al Carrito
+                    </button>
+                    <p class="text-center text-sm text-gray-500">Sin comisiones ocultas. Elegí el pago en el carrito.</p>
+                </form>
             </div>
         </div>
     </section>
 
-<!-- FAQ -->
-<section id="faq" class="faq">
-<h2 class="section-title">Preguntas Frecuentes</h2>
-<div class="faq-item"><div class="faq-question">⏱️ ¿Cuánto tarda la recarga?<span class="faq-icon">+</span></div><div class="faq-answer">Entre 15 minutos y 1 hora.</div></div>
-<div class="faq-item"><div class="faq-question">📅 ¿Atienden fines de semana?<span class="faq-icon">+</span></div><div class="faq-answer">Sí, todos los días del año.</div></div>
-<div class="faq-item"><div class="faq-question">💸 ¿Formas de pago?<span class="faq-icon">+</span></div><div class="faq-answer">Transferencia bancaria en pesos cubano (CUP).</div></div>
-<div class="faq-item"><div class="faq-question">📱 ¿El bono de SMS viene incluido?<span class="faq-icon">+</span></div><div class="faq-answer">Sí, totalmente gratis.</div></div>
-</section>
+    <!-- Cómo funciona -->
+    <section id="como-funciona" class="py-16 bg-gray-50">
+        <div class="max-w-5xl mx-auto px-4">
+            <h2 class="text-2xl font-bold text-center mb-12">Cómo funciona</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm">
+                    <div class="text-4xl font-bold text-primary/20 mb-2">01</div>
+                    <h3 class="font-semibold text-lg mb-2">Agregá al carrito</h3>
+                    <p class="text-gray-600">Número + paquete → revisá tu pedido.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm">
+                    <div class="text-4xl font-bold text-primary/20 mb-2">02</div>
+                    <h3 class="font-semibold text-lg mb-2">Seleccioná pago</h3>
+                    <p class="text-gray-600">Prex, Mi Dinero, BROU o Abitab/RedPagos.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm">
+                    <div class="text-4xl font-bold text-primary/20 mb-2">03</div>
+                    <h3 class="font-semibold text-lg mb-2">¡Confirmado! ✅</h3>
+                    <p class="text-gray-600">Código de seguimiento por WhatsApp al instante.</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-<!-- Garantías (extra) y Contacto -->
-<section id="contacto">
-<div class="features">
-<h2 class="section-title">Garantías y Compromiso</h2>
-<div class="features-grid">
-<div class="feature-item"><h4>✅ Garantía de Entrega</h4><p>Si no se puede procesar, recibes devolución total.</p></div>
-<div class="feature-item"><h4>🔍 Transparencia Total</h4><p>Captura de cada operación.</p></div>
-<div class="feature-item"><h4>💬 Soporte Continuo</h4><p>8am a 10pm todos los días.</p></div>
-<div class="feature-item"><h4>🔒 Pago Seguro</h4><p>Transferencia bancaria en Cuba.</p></div>
-</div>
-</div>
-</section>
+    <footer class="bg-dark text-white py-10 mt-12">
+        <div class="max-w-5xl mx-auto px-4 text-center">
+            <p>© 2026 Recargas Cuba UY. Montevideo, Uruguay.</p>
+            <p class="text-gray-400 text-sm mt-2">Atención: lun-sáb 9-21 h · soporte@recargascuba.uy</p>
+        </div>
+    </footer>
 
-<div class="cta-final" id="contacto-cta">
-<h2>¿Tienes más preguntas?</h2>
-<a href="https://wa.me/5355462081?text=Hola%2C%20quiero%20informaci%C3%B3n" class="btn-wa" target="_blank">📲 Contactar por WhatsApp</a>
-</div>
-</div>
-</main>
+    <!-- Lógica Completa -->
+    <script>
+        let carrito = [];
+        const TELEFONO_DESTINO = '59896038426'; // Tu número con código de país
 
-<footer>
-<div class="container">
-<p>© 2026 · Recargas movil de Cuba Todos los derechos reservados.</p>
-  <p>Web Master Julio Cesar Ruiz Peña</p>
-</div>
-</footer>
+        // Elementos
+        const form = document.getElementById('formRecarga');
+        const abrirCarrito = document.getElementById('abrirCarrito');
+        const cerrarCarrito = document.getElementById('cerrarCarrito');
+        const panelCarrito = document.getElementById('panelCarrito');
+        const overlay = document.getElementById('overlayCarrito');
+        const contador = document.getElementById('contadorCarrito');
+        const carritoVacio = document.getElementById('carritoVacio');
+        const listaCarrito = document.getElementById('listaCarrito');
+        const seccionPago = document.getElementById('seccionPago');
+        const pieCarrito = document.getElementById('pieCarrito');
+        const totalCarrito = document.getElementById('totalCarrito');
+        const botonConfirmar = document.getElementById('botonConfirmar');
 
-<script src="Scrip.js"></script>
+        // Selección visual de paquetes
+        document.querySelectorAll('.paquete-option input').forEach(input => {
+            input.addEventListener('change', () => {
+                document.querySelectorAll('.paquete-option').forEach(el => el.classList.remove('card-selected'));
+                input.closest('.paquete-option').classList.add('card-selected');
+            });
+            if (input.checked) input.closest('.paquete-option').classList.add('card-selected');
+        });
 
+        // Selección visual de método de pago
+        document.querySelectorAll('input[name="metodoPago"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                document.querySelectorAll('[id^="pago-"]').forEach(lbl => lbl.classList.remove('card-selected'));
+                radio.closest('label').classList.add('card-selected');
+            });
+            if (radio.checked) radio.closest('label').classList.add('card-selected');
+        });
+
+        // Abrir/cerrar carrito
+        function toggleCarrito(abrir) {
+            panelCarrito.classList.toggle('carrito-panel', abrir);
+            overlay.classList.toggle('hidden', !abrir);
+        }
+        abrirCarrito.onclick = () => toggleCarrito(true);
+        cerrarCarrito.onclick = overlay.onclick = () => toggleCarrito(false);
+
+        // Generar código de seguimiento
+        function generarCodigo() {
+            const prefijo = 'RC-';
+            const letras = Math.random().toString(36).substring(2, 5).toUpperCase();
+            const numeros = Math.floor(Math.random() * 900 + 100);
+            return `${prefijo}${letras}${numeros}`;
+        }
+
+        // Agregar al carrito
+        form.onsubmit = (e) => {
+            e.preventDefault();
+            
+            const paqueteSel = document.querySelector('input[name="paquete"]:checked');
+            const item = {
+                id: Date.now(),
+                numero: document.getElementById('numeroDestino').value,
+                nombre: document.getElementById('nombreDestino').value || 'Sin especificar',
+                paqueteNombre: paqueteSel.dataset.nombre,
+                precio: parseInt(paqueteSel.dataset.precio),
+                detalle: paqueteSel.dataset.detalle,
+                comprador: {
+                    nombre: document.getElementById('compradorNombre').value,
+                    email: document.getElementById('compradorEmail').value,
+                    celular: document.getElementById('compradorCelular').value
+                }
+            };
+
+            carrito.push(item);
+            actualizarCarrito();
+            toggleCarrito(true);
+            
+            // Resetear formulario
+            form.reset();
+            document.querySelectorAll('.paquete-option').forEach(el => el.classList.remove('card-selected'));
+            document.querySelector('input[name="paquete"][value="estandar"]').checked = true;
+            document.querySelector('input[name="paquete"][value="estandar"]').closest('.paquete-option').classList.add('card-selected');
+        };
+
+        // Actualizar vista del carrito
+        function actualizarCarrito() {
+            contador.textContent = carrito.length;
+            contador.classList.toggle('hidden', carrito.length === 0);
+            carritoVacio.classList.toggle('hidden', carrito.length > 0);
+            listaCarrito.classList.toggle('hidden', carrito.length === 0);
+            seccionPago.classList.toggle('hidden', carrito.length === 0);
+            pieCarrito.classList.toggle('hidden', carrito.length === 0);
+
+            if (carrito.length === 0) return;
+
+            // Renderizar items
+            listaCarrito.innerHTML = carrito.map(item => `
+                <div class="border rounded-lg p-4 relative">
+                    <button class="absolute top-2 right-2 text-gray-400 hover:text-red-500 text-lg" data-id="${item.id}">&times;</button>
+                    <p class="font-medium">${item.paqueteNombre}</p>
+                    <p class="text-sm text-gray-500">📱 Para: +53 ${item.numero}</p>
+                    <p class="text-sm text-gray-500">👤 ${item.nombre}</p>
+                    <p class="text-sm text-gray-500">📦 ${item.detalle}</p>
+                    <p class="font-bold text-primary mt-2">$ ${item.precio} UYU</p>
+                </div>
+            `).join('');
+
+            // Eliminar items
+            listaCarrito.querySelectorAll('button[data-id]').forEach(btn => {
+                btn.onclick = () => {
+                    carrito = carrito.filter(i => i.id !== parseInt(btn.dataset.id));
+                    actualizarCarrito();
+                };
+            });
+
+            // Total
+            const total = carrito.reduce((sum, i) => sum + i.precio, 0);
+            totalCarrito.textContent = `$ ${total}`;
+        }
+
+        // Enviar por WhatsApp
+        function enviarWhatsApp(pedido) {
+            const total = carrito.reduce((sum, i) => sum + i.precio, 0);
+            const metodoPago = document.querySelector('input[name="metodoPago"]:checked').value;
+            
+            let mensaje = `✅ *NUEVO PEDIDO RECIBIDO*\n\n`;
+            mensaje += `📋 *Código:* ${pedido.codigo}\n`;
+            mensaje += `👤 *Comprador:* ${pedido.compradorNombre}\n`;
+            mensaje += `📧 *Email:* ${pedido.compradorEmail}\n`;
+            mensaje += `📱 *Celular:* ${pedido.compradorCelular}\n`;
+            mensaje += `💳 *Método de pago:* ${metodoPago}\n\n`;
+            mensaje += `📦 *Detalle del pedido:*\n`;
+            
+            carrito.forEach((item, index) => {
+                mensaje += `\n${index + 1}. ${item.paqueteNombre}\n`;
+                mensaje += `   → Para: +53 ${item.numero} (${item.nombre})\n`;
+                mensaje += `   → ${item.detalle}\n`;
+                mensaje += `   → $ ${item.precio} UYU\n`;
+            });
+            
+            mensaje += `\n💰 *TOTAL A PAGAR:* $ ${total} UYU\n\n`;
+            mensaje += `⏳ Esperando confirmación de pago...`;
+
+            // Codificar para URL
+            const url = `https://wa.me/${TELEFONO_DESTINO}?text=${encodeURIComponent(mensaje)}`;
+            
+            // Abrir WhatsApp en nueva pestaña
+            window.open(url, '_blank');
+        }
+
+        // Confirmar pago
+        botonConfirmar.onclick = () => {
+            if (carrito.length === 0) return alert('El carrito está vacío');
+
+            const codigo = generarCodigo();
+            const total = carrito.reduce((sum, i) => sum + i.precio, 0);
+            const metodoPago = document.querySelector('input[name="metodoPago"]:checked').value;
+            
+            // Datos del primer comprador (si hay varios, se toma el primero)
+            const datosComprador = carrito[0].comprador;
+
+            // Enviar a tu WhatsApp
+            enviarWhatsApp({
+                codigo,
+                compradorNombre: datosComprador.nombre,
+                compradorEmail: datosComprador.email,
+                compradorCelular: datosComprador.celular
+            });
+
+            // Mensaje al cliente
+            alert(`✅ ¡PEDIDO CONFIRMADO!\n\n📋 Código: ${codigo}\n💰 Total: $ ${total} UYU\n💳 Pago: ${metodoPago}\n\n📲 Se abrió WhatsApp con el detalle.\n¡Gracias por confiar en nosotros! 🇺🇾🇨🇺`);
+
+            // Limpiar carrito
+            carrito = [];
+            actualizarCarrito();
+            toggleCarrito(false);
+        };
+    </script>
 </body>
 </html>

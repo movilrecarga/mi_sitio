@@ -14,6 +14,7 @@
                         primary: '#165DFF',
                         secondary: '#34D399',
                         dark: '#1F2937',
+                        admin: '#7C3AED',
                     },
                 }
             }
@@ -25,14 +26,14 @@
             background-color: #EFF6FF;
             box-shadow: 0 4px 12px rgba(22, 93, 255, 0.15);
         }
-        .carrito-panel {
-            transform: translateX(0) !important;
-        }
+        .carrito-panel { transform: translateX(0) !important; }
         input[type="radio"] { display: none; }
         .metodo-label { cursor: pointer; transition: all 0.2s; }
         .estado-pendiente { background-color: #FEF3C7; color: #92400E; }
         .estado-confirmado { background-color: #D1FAE5; color: #065F46; }
         .estado-enviado { background-color: #E0E7FF; color: #3730A3; }
+        .oculto { display: none !important; }
+        .fila-pedido:hover { background-color: #F9FAFB; }
     </style>
 </head>
 <body class="text-dark bg-white">
@@ -40,9 +41,12 @@
     <nav class="sticky top-0 bg-white shadow-sm z-50">
         <div class="max-w-7xl mx-auto px-4 flex justify-between items-center py-4">
             <a href="#" class="text-2xl font-bold text-primary">Recargas Cuba UY</a>
-            <div class="flex items-center gap-6">
+            <div class="flex items-center gap-4">
                 <a href="#seguimiento" class="hidden md:inline hover:text-primary font-medium">Seguir Pedido</a>
                 <a href="#como-funciona" class="hidden md:inline hover:text-primary">Cómo funciona</a>
+                <button id="btnAdmin" class="text-admin hover:text-admin/80 text-sm font-medium flex items-center gap-1">
+                    <i class="fa fa-cog"></i> <span class="hidden sm:inline">Admin</span>
+                </button>
                 <button id="abrirCarrito" class="relative p-2 hover:bg-gray-100 rounded-full">
                     <i class="fa fa-shopping-cart text-lg"></i>
                     <span id="contadorCarrito" class="absolute -top-1 -right-1 bg-primary text-white text-xs w-5 h-5 flex items-center justify-center rounded-full hidden">0</span>
@@ -51,7 +55,82 @@
         </div>
     </nav>
 
-    <!-- Panel Carrito Lateral -->
+    <!-- 🔐 MODAL DE ACCESO ADMINISTRATIVO -->
+    <div id="modalAcceso" class="fixed inset-0 bg-black/50 z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md">
+            <h3 class="text-xl font-bold mb-4 text-center">🔐 Acceso Administrativo</h3>
+            <form id="formAcceso">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
+                <input type="password" id="claveAdmin" placeholder="Escribí la contraseña" 
+                    class="w-full border-2 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-admin/50 mb-4">
+                <div class="flex gap-3">
+                    <button type="button" id="cerrarAcceso" class="flex-1 bg-gray-200 hover:bg-gray-300 py-2.5 rounded-lg font-medium">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-admin text-white hover:bg-admin/90 py-2.5 rounded-lg font-medium">Ingresar</button>
+                </div>
+                <p id="errorAcceso" class="text-red-500 text-sm mt-3 hidden text-center">Contraseña incorrecta</p>
+            </form>
+        </div>
+    </div>
+
+    <!-- ⚙️ PANEL DE CONTROL (oculto por defecto) -->
+    <section id="panelAdmin" class="py-10 bg-gray-50 hidden">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-admin">⚙️ Panel de Control</h2>
+                <button id="cerrarAdmin" class="text-gray-500 hover:text-black"><i class="fa fa-times"></i> Cerrar</button>
+            </div>
+
+            <!-- Resumen -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-yellow-400">
+                    <p class="text-sm text-gray-500">Pendientes</p>
+                    <p id="cantPendientes" class="text-2xl font-bold text-yellow-600">0</p>
+                </div>
+                <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-green-500">
+                    <p class="text-sm text-gray-500">Confirmados</p>
+                    <p id="cantConfirmados" class="text-2xl font-bold text-green-600">0</p>
+                </div>
+                <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-indigo-500">
+                    <p class="text-sm text-gray-500">Enviados</p>
+                    <p id="cantEnviados" class="text-2xl font-bold text-indigo-600">0</p>
+                </div>
+            </div>
+
+            <!-- Lista de Pedidos -->
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="p-4 border-b flex justify-between items-center">
+                    <h3 class="font-semibold text-lg">📋 Todos los Pedidos</h3>
+                    <button id="btnVaciar" class="text-red-500 text-sm hover:text-red-700">
+                        <i class="fa fa-trash"></i> Limpiar lista
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 text-gray-600">
+                            <tr>
+                                <th class="p-3 text-left">Código</th>
+                                <th class="p-3 text-left">Cliente</th>
+                                <th class="p-3 text-left">Destino</th>
+                                <th class="p-3 text-left">Paquete</th>
+                                <th class="p-3 text-left">Pago</th>
+                                <th class="p-3 text-left">Estado</th>
+                                <th class="p-3 text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listaPedidos">
+                            <tr id="sinPedidos">
+                                <td colspan="7" class="p-8 text-center text-gray-400">
+                                    Todavía no hay pedidos. Cuando alguien compre, aparecerán acá.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PANEL CARRITO LATERAL -->
     <div id="overlayCarrito" class="fixed inset-0 bg-black/50 z-50 hidden"></div>
     <div id="panelCarrito" class="fixed top-0 right-0 h-full w-full md:w-[420px] bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300">
         <div class="h-full flex flex-col">
@@ -59,16 +138,13 @@
                 <h2 class="text-xl font-bold">Tu Carrito 🛒</h2>
                 <button id="cerrarCarrito" class="text-gray-500 hover:text-black text-xl">&times;</button>
             </div>
-            
             <div id="contenidoCarrito" class="flex-1 overflow-y-auto p-4">
                 <div id="carritoVacio" class="text-center py-12 text-gray-500">
                     <i class="fa fa-shopping-cart text-4xl mb-4 opacity-20"></i>
                     <p>Tu carrito está vacío</p>
                     <p class="text-sm mt-2">Seleccioná una recarga para empezar</p>
                 </div>
-                
                 <div id="listaCarrito" class="space-y-4 hidden"></div>
-
                 <div id="seccionPago" class="hidden mt-6">
                     <h3 class="font-semibold text-lg mb-3">💳 Método de Pago</h3>
                     <div class="space-y-3">
@@ -103,7 +179,6 @@
                     </div>
                 </div>
             </div>
-            
             <div id="pieCarrito" class="border-t p-4 hidden">
                 <div class="flex justify-between text-lg font-semibold mb-4">
                     <span>Total a pagar</span>
@@ -116,107 +191,73 @@
         </div>
     </div>
 
-    <!-- Hero / Formulario Principal -->
+    <!-- HERO / FORMULARIO -->
     <section class="py-12 md:py-20 bg-gradient-to-b from-blue-50 to-white">
         <div class="max-w-5xl mx-auto px-4">
             <div class="text-center mb-10">
-                <h1 class="text-[clamp(1.8rem,4vw,3rem)] font-bold mb-4">
-                    Recargá celulares en Cuba desde Uruguay 🇺🇾 → 🇨🇺
-                </h1>
-                <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-                    Saldo y datos para cualquier número Cubacel. Pagá en pesos uruguayos con Prex, Mi Dinero, transferencia o en efectivo.
-                </p>
+                <h1 class="text-[clamp(1.8rem,4vw,3rem)] font-bold mb-4">Recargá celulares en Cuba desde Uruguay 🇺🇾 → 🇨🇺</h1>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">Saldo y datos para cualquier número Cubacel. Pagá en pesos uruguayos con Prex, Mi Dinero, transferencia o en efectivo.</p>
                 <div class="flex flex-wrap justify-center gap-6 mt-6">
                     <span class="flex items-center gap-2"><i class="fa fa-bolt text-primary"></i>Acreditación rápida</span>
                     <span class="flex items-center gap-2"><i class="fa fa-undo text-primary"></i>Devolución garantizada</span>
                     <span class="flex items-center gap-2"><i class="fa fa-whatsapp text-green-500"></i>Aviso por WhatsApp</span>
                 </div>
             </div>
-
             <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8">
                 <form id="formRecarga" class="space-y-8">
                     <div>
                         <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
-                            <span class="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">1</span>
-                            Número en Cuba
+                            <span class="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">1</span>Número en Cuba
                         </h2>
                         <div class="flex gap-3">
                             <div class="w-20 flex-shrink-0">
                                 <label class="block text-sm text-gray-500 mb-1">País</label>
-                                <div class="border rounded-lg px-3 py-2.5 bg-gray-50 flex items-center gap-2">
-                                    <span>🇨🇺</span><span>+53</span>
-                                </div>
+                                <div class="border rounded-lg px-3 py-2.5 bg-gray-50 flex items-center gap-2"><span>🇨🇺</span><span>+53</span></div>
                             </div>
                             <div class="flex-1">
                                 <label class="block text-sm text-gray-500 mb-1">Celular Cubacel *</label>
-                                <input type="tel" id="numeroDestino" placeholder="5X XXX XXX" 
-                                    class="w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50" required>
+                                <input type="tel" id="numeroDestino" placeholder="5X XXX XXX" class="w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50" required>
                             </div>
                         </div>
                         <div class="mt-3">
                             <label class="block text-sm text-gray-500 mb-1">Nombre de quien recibe (opcional)</label>
-                            <input type="text" id="nombreDestino" placeholder="Ej: Abuela Marta" 
-                                class="w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50">
+                            <input type="text" id="nombreDestino" placeholder="Ej: Abuela Marta" class="w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50">
                         </div>
                     </div>
-
                     <div>
                         <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
-                            <span class="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">2</span>
-                            Elegí la recarga
+                            <span class="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">2</span>Elegí la recarga
                         </h2>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <label class="cursor-pointer block border-2 rounded-xl p-4 transition-all hover:border-primary/50 paquete-option">
                                 <input type="radio" name="paquete" value="basica" data-nombre="Recarga Básica" data-precio="490" data-detalle="500 CUP + 1 GB" class="hidden">
-                                <div class="font-medium">Básica</div>
-                                <div class="text-2xl font-bold text-primary mt-1">$ 490</div>
-                                <div class="text-gray-500 text-sm mt-2">500 CUP<br>1 GB datos</div>
+                                <div class="font-medium">Básica</div><div class="text-2xl font-bold text-primary mt-1">$ 490</div><div class="text-gray-500 text-sm mt-2">500 CUP<br>1 GB datos</div>
                             </label>
                             <label class="cursor-pointer block border-2 rounded-xl p-4 transition-all hover:border-primary/50 paquete-option">
                                 <input type="radio" name="paquete" value="estandar" data-nombre="Recarga Estándar" data-precio="890" data-detalle="1.000 CUP + 4 GB" class="hidden" checked>
                                 <div class="font-medium">Estándar <span class="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full ml-1">Popular</span></div>
-                                <div class="text-2xl font-bold text-primary mt-1">$ 890</div>
-                                <div class="text-gray-500 text-sm mt-2">1.000 CUP<br>4 GB datos</div>
+                                <div class="text-2xl font-bold text-primary mt-1">$ 890</div><div class="text-gray-500 text-sm mt-2">1.000 CUP<br>4 GB datos</div>
                             </label>
                             <label class="cursor-pointer block border-2 rounded-xl p-4 transition-all hover:border-primary/50 paquete-option">
                                 <input type="radio" name="paquete" value="plus" data-nombre="Recarga Plus" data-precio="1290" data-detalle="1.500 CUP + 8 GB" class="hidden">
-                                <div class="font-medium">Plus</div>
-                                <div class="text-2xl font-bold text-primary mt-1">$ 1.290</div>
-                                <div class="text-gray-500 text-sm mt-2">1.500 CUP<br>8 GB datos</div>
+                                <div class="font-medium">Plus</div><div class="text-2xl font-bold text-primary mt-1">$ 1.290</div><div class="text-gray-500 text-sm mt-2">1.500 CUP<br>8 GB datos</div>
                             </label>
                             <label class="cursor-pointer block border-2 rounded-xl p-4 transition-all hover:border-primary/50 paquete-option">
                                 <input type="radio" name="paquete" value="premium" data-nombre="Recarga Premium" data-precio="1890" data-detalle="2.500 CUP + 14 GB" class="hidden">
-                                <div class="font-medium">Premium</div>
-                                <div class="text-2xl font-bold text-primary mt-1">$ 1.890</div>
-                                <div class="text-gray-500 text-sm mt-2">2.500 CUP<br>14 GB datos</div>
+                                <div class="font-medium">Premium</div><div class="text-2xl font-bold text-primary mt-1">$ 1.890</div><div class="text-gray-500 text-sm mt-2">2.500 CUP<br>14 GB datos</div>
                             </label>
                         </div>
                     </div>
-
                     <div>
                         <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
-                            <span class="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">3</span>
-                            Tus datos
+                            <span class="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">3</span>Tus datos
                         </h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm text-gray-500 mb-1">Nombre completo *</label>
-                                <input type="text" id="compradorNombre" 
-                                    class="w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50" required>
-                            </div>
-                            <div>
-                                <label class="block text-sm text-gray-500 mb-1">Email *</label>
-                                <input type="email" id="compradorEmail" 
-                                    class="w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50" required>
-                            </div>
-                            <div class="md:col-span-2">
-                                <label class="block text-sm text-gray-500 mb-1">Celular en Uruguay *</label>
-                                <input type="tel" id="compradorCelular" placeholder="09X XXX XXX" 
-                                    class="w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50" required>
-                            </div>
+                            <div><label class="block text-sm text-gray-500 mb-1">Nombre completo *</label><input type="text" id="compradorNombre" class="w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50" required></div>
+                            <div><label class="block text-sm text-gray-500 mb-1">Email *</label><input type="email" id="compradorEmail" class="w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50" required></div>
+                            <div class="md:col-span-2"><label class="block text-sm text-gray-500 mb-1">Celular en Uruguay *</label><input type="tel" id="compradorCelular" placeholder="09X XXX XXX" class="w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/50" required></div>
                         </div>
                     </div>
-
                     <button type="submit" class="w-full bg-secondary hover:bg-secondary/90 text-white font-medium py-3 rounded-lg transition-colors text-lg">
                         <i class="fa fa-plus-circle mr-2"></i> Agregar al Carrito
                     </button>
@@ -226,68 +267,33 @@
         </div>
     </section>
 
-    <!-- 🔍 SECCIÓN DE SEGUIMIENTO -->
+    <!-- 🔍 SEGUIMIENTO -->
     <section id="seguimiento" class="py-16 bg-gray-50">
         <div class="max-w-2xl mx-auto px-4">
             <h2 class="text-2xl font-bold text-center mb-3">🔍 Seguimiento de Pedido</h2>
-            <p class="text-center text-gray-600 mb-8">Ingresá tu código de seguimiento para ver el estado de tu recarga</p>
-            
+            <p class="text-center text-gray-600 mb-8">Ingresá tu código para ver el estado</p>
             <div class="bg-white rounded-2xl shadow-lg p-6">
                 <form id="formSeguimiento" class="space-y-4">
                     <div>
                         <label for="codigoSeguimiento" class="block text-sm font-medium text-gray-700 mb-2">Código de Seguimiento</label>
                         <div class="flex gap-3">
-                            <input 
-                                type="text" 
-                                id="codigoSeguimiento" 
-                                placeholder="Ej: RC-ABC123" 
-                                class="flex-1 border-2 rounded-lg px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                                style="text-transform: uppercase;"
-                            >
-                            <button 
-                                type="submit" 
-                                class="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-                            >
-                                <i class="fa fa-search"></i> Buscar
-                            </button>
+                            <input type="text" id="codigoSeguimiento" placeholder="Ej: RC-ABC123" class="flex-1 border-2 rounded-lg px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-primary/50" style="text-transform: uppercase;">
+                            <button type="submit" class="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg font-medium"><i class="fa fa-search"></i> Buscar</button>
                         </div>
                     </div>
                 </form>
-
-                <!-- Resultado de la búsqueda -->
                 <div id="resultadoSeguimiento" class="mt-6 hidden">
                     <div id="pedidoEncontrado" class="hidden">
                         <div class="border rounded-xl p-5 bg-gray-50 space-y-4">
-                            <div class="flex justify-between items-center">
-                                <span class="font-medium text-gray-600">Código:</span>
-                                <span id="resCodigo" class="font-bold text-lg text-primary"></span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="font-medium text-gray-600">Estado:</span>
-                                <span id="resEstado" class="px-3 py-1 rounded-full text-sm font-medium"></span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="font-medium text-gray-600">Paquete:</span>
-                                <span id="resPaquete"></span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="font-medium text-gray-600">Destino:</span>
-                                <span id="resDestino"></span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="font-medium text-gray-600">Método de pago:</span>
-                                <span id="resMetodoPago"></span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="font-medium text-gray-600">Fecha:</span>
-                                <span id="resFecha"></span>
-                            </div>
-                            <div class="pt-3 border-t text-sm text-gray-600">
-                                <p id="resMensaje"></p>
-                            </div>
+                            <div class="flex justify-between"><span class="font-medium text-gray-600">Código:</span><span id="resCodigo" class="font-bold text-lg text-primary"></span></div>
+                            <div class="flex justify-between"><span class="font-medium text-gray-600">Estado:</span><span id="resEstado" class="px-3 py-1 rounded-full text-sm font-medium"></span></div>
+                            <div class="flex justify-between"><span class="font-medium text-gray-600">Paquete:</span><span id="resPaquete"></span></div>
+                            <div class="flex justify-between"><span class="font-medium text-gray-600">Destino:</span><span id="resDestino"></span></div>
+                            <div class="flex justify-between"><span class="font-medium text-gray-600">Método de pago:</span><span id="resMetodoPago"></span></div>
+                            <div class="flex justify-between"><span class="font-medium text-gray-600">Fecha:</span><span id="resFecha"></span></div>
+                            <div class="pt-3 border-t text-sm text-gray-600"><p id="resMensaje"></p></div>
                         </div>
                     </div>
-                    
                     <div id="pedidoNoEncontrado" class="text-center py-6 text-gray-500 hidden">
                         <i class="fa fa-search-minus text-3xl mb-3 text-gray-300"></i>
                         <p class="font-medium">Código no encontrado</p>
@@ -298,26 +304,14 @@
         </div>
     </section>
 
-    <!-- Cómo funciona -->
+    <!-- CÓMO FUNCIONA -->
     <section id="como-funciona" class="py-16">
         <div class="max-w-5xl mx-auto px-4">
             <h2 class="text-2xl font-bold text-center mb-12">Cómo funciona</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="bg-gray-50 p-6 rounded-xl">
-                    <div class="text-4xl font-bold text-primary/20 mb-2">01</div>
-                    <h3 class="font-semibold text-lg mb-2">Agregá al carrito</h3>
-                    <p class="text-gray-600">Número + paquete → revisá tu pedido.</p>
-                </div>
-                <div class="bg-gray-50 p-6 rounded-xl">
-                    <div class="text-4xl font-bold text-primary/20 mb-2">02</div>
-                    <h3 class="font-semibold text-lg mb-2">Seleccioná pago</h3>
-                    <p class="text-gray-600">Prex, Mi Dinero, BROU o Abitab/RedPagos.</p>
-                </div>
-                <div class="bg-gray-50 p-6 rounded-xl">
-                    <div class="text-4xl font-bold text-primary/20 mb-2">03</div>
-                    <h3 class="font-semibold text-lg mb-2">¡Confirmado! ✅</h3>
-                    <p class="text-gray-600">Código de seguimiento por WhatsApp al instante.</p>
-                </div>
+                <div class="bg-gray-50 p-6 rounded-xl"><div class="text-4xl font-bold text-primary/20 mb-2">01</div><h3 class="font-semibold text-lg mb-2">Agregá al carrito</h3><p class="text-gray-600">Número + paquete → revisá tu pedido.</p></div>
+                <div class="bg-gray-50 p-6 rounded-xl"><div class="text-4xl font-bold text-primary/20 mb-2">02</div><h3 class="font-semibold text-lg mb-2">Seleccioná pago</h3><p class="text-gray-600">Prex, Mi Dinero, BROU o Abitab/RedPagos.</p></div>
+                <div class="bg-gray-50 p-6 rounded-xl"><div class="text-4xl font-bold text-primary/20 mb-2">03</div><h3 class="font-semibold text-lg mb-2">¡Confirmado! ✅</h3><p class="text-gray-600">Código de seguimiento por WhatsApp al instante.</p></div>
             </div>
         </div>
     </section>
@@ -329,11 +323,14 @@
         </div>
     </footer>
 
-    <!-- Lógica Completa -->
+    <!-- LÓGICA COMPLETA -->
     <script>
+        // ⚙️ CONFIGURACIÓN
+        const CONTRASEÑA_ADMIN = 'admin123'; // ← Cambiá esta contraseña por la tuya
+        const TELEFONO_DESTINO = '59896038426'; // Tu WhatsApp
+
         let carrito = [];
-        let pedidos = []; // Almacén de pedidos para seguimiento
-        const TELEFONO_DESTINO = '59896038426';
+        let pedidos = [];
 
         // Elementos
         const form = document.getElementById('formRecarga');
@@ -352,8 +349,16 @@
         const resultadoSeguimiento = document.getElementById('resultadoSeguimiento');
         const pedidoEncontrado = document.getElementById('pedidoEncontrado');
         const pedidoNoEncontrado = document.getElementById('pedidoNoEncontrado');
+        const btnAdmin = document.getElementById('btnAdmin');
+        const modalAcceso = document.getElementById('modalAcceso');
+        const formAcceso = document.getElementById('formAcceso');
+        const panelAdmin = document.getElementById('panelAdmin');
+        const cerrarAdmin = document.getElementById('cerrarAdmin');
+        const cerrarAcceso = document.getElementById('cerrarAcceso');
+        const btnVaciar = document.getElementById('btnVaciar');
+        const listaPedidos = document.getElementById('listaPedidos');
 
-        // Selección visual de paquetes
+        // Selección visual paquetes
         document.querySelectorAll('.paquete-option input').forEach(input => {
             input.addEventListener('change', () => {
                 document.querySelectorAll('.paquete-option').forEach(el => el.classList.remove('card-selected'));
@@ -362,7 +367,7 @@
             if (input.checked) input.closest('.paquete-option').classList.add('card-selected');
         });
 
-        // Selección visual de método de pago
+        // Selección visual método pago
         document.querySelectorAll('input[name="metodoPago"]').forEach(radio => {
             radio.addEventListener('change', () => {
                 document.querySelectorAll('[id^="pago-"]').forEach(lbl => lbl.classList.remove('card-selected'));
@@ -379,7 +384,7 @@
         abrirCarrito.onclick = () => toggleCarrito(true);
         cerrarCarrito.onclick = overlay.onclick = () => toggleCarrito(false);
 
-        // Generar código de seguimiento
+        // Generar código
         function generarCodigo() {
             const prefijo = 'RC-';
             const letras = Math.random().toString(36).substring(2, 5).toUpperCase();
@@ -390,33 +395,28 @@
         // Agregar al carrito
         form.onsubmit = (e) => {
             e.preventDefault();
-            
-            const paqueteSel = document.querySelector('input[name="paquete"]:checked');
-            const item = {
+            const sel = document.querySelector('input[name="paquete"]:checked');
+            carrito.push({
                 id: Date.now(),
                 numero: document.getElementById('numeroDestino').value,
                 nombre: document.getElementById('nombreDestino').value || 'Sin especificar',
-                paqueteNombre: paqueteSel.dataset.nombre,
-                precio: parseInt(paqueteSel.dataset.precio),
-                detalle: paqueteSel.dataset.detalle,
+                paqueteNombre: sel.dataset.nombre,
+                precio: parseInt(sel.dataset.precio),
+                detalle: sel.dataset.detalle,
                 comprador: {
                     nombre: document.getElementById('compradorNombre').value,
                     email: document.getElementById('compradorEmail').value,
                     celular: document.getElementById('compradorCelular').value
                 }
-            };
-
-            carrito.push(item);
+            });
             actualizarCarrito();
             toggleCarrito(true);
-            
             form.reset();
             document.querySelectorAll('.paquete-option').forEach(el => el.classList.remove('card-selected'));
             document.querySelector('input[name="paquete"][value="estandar"]').checked = true;
             document.querySelector('input[name="paquete"][value="estandar"]').closest('.paquete-option').classList.add('card-selected');
         };
 
-        // Actualizar vista del carrito
         function actualizarCarrito() {
             contador.textContent = carrito.length;
             contador.classList.toggle('hidden', carrito.length === 0);
@@ -424,9 +424,7 @@
             listaCarrito.classList.toggle('hidden', carrito.length === 0);
             seccionPago.classList.toggle('hidden', carrito.length === 0);
             pieCarrito.classList.toggle('hidden', carrito.length === 0);
-
             if (carrito.length === 0) return;
-
             listaCarrito.innerHTML = carrito.map(item => `
                 <div class="border rounded-lg p-4 relative">
                     <button class="absolute top-2 right-2 text-gray-400 hover:text-red-500 text-lg" data-id="${item.id}">&times;</button>
@@ -437,113 +435,141 @@
                     <p class="font-bold text-primary mt-2">$ ${item.precio} UYU</p>
                 </div>
             `).join('');
-
             listaCarrito.querySelectorAll('button[data-id]').forEach(btn => {
-                btn.onclick = () => {
-                    carrito = carrito.filter(i => i.id !== parseInt(btn.dataset.id));
-                    actualizarCarrito();
-                };
+                btn.onclick = () => { carrito = carrito.filter(i => i.id !== parseInt(btn.dataset.id)); actualizarCarrito(); };
             });
-
-            const total = carrito.reduce((sum, i) => sum + i.precio, 0);
+            const total = carrito.reduce((s, i) => s + i.precio, 0);
             totalCarrito.textContent = `$ ${total}`;
         }
 
-        // Enviar por WhatsApp
-        function enviarWhatsApp(pedido) {
-            const total = carrito.reduce((sum, i) => sum + i.precio, 0);
-            const metodoPago = document.querySelector('input[name="metodoPago"]:checked').value;
-            
-            let mensaje = `✅ *NUEVO PEDIDO RECIBIDO*\n\n`;
-            mensaje += `📋 *Código:* ${pedido.codigo}\n`;
-            mensaje += `👤 *Comprador:* ${pedido.compradorNombre}\n`;
-            mensaje += `📧 *Email:* ${pedido.compradorEmail}\n`;
-            mensaje += `📱 *Celular:* ${pedido.compradorCelular}\n`;
-            mensaje += `💳 *Método de pago:* ${metodoPago}\n\n`;
-            mensaje += `📦 *Detalle del pedido:*\n`;
-            
-            carrito.forEach((item, index) => {
-                mensaje += `\n${index + 1}. ${item.paqueteNombre}\n`;
-                mensaje += `   → Para: +53 ${item.numero} (${item.nombre})\n`;
-                mensaje += `   → ${item.detalle}\n`;
-                mensaje += `   → $ ${item.precio} UYU\n`;
+        // Enviar WhatsApp
+        function enviarWhatsApp(pedido, total, metodoPago) {
+            let msg = `✅ *NUEVO PEDIDO RECIBIDO*\n\n📋 *Código:* ${pedido.codigo}\n👤 *Comprador:* ${pedido.nombre}\n📧 *Email:* ${pedido.email}\n📱 *Celular:* ${pedido.celular}\n💳 *Método:* ${metodoPago}\n\n📦 *Detalle:*\n`;
+            carrito.forEach((it, i) => {
+                msg += `${i+1}. ${it.paqueteNombre}\n   → +53 ${it.numero} (${it.nombre})\n   → ${it.detalle}\n   → $ ${it.precio} UYU\n`;
             });
-            
-            mensaje += `\n💰 *TOTAL A PAGAR:* $ ${total} UYU\n\n`;
-            mensaje += `⏳ Estado: Pendiente de confirmación de pago`;
-
-            const url = `https://wa.me/${TELEFONO_DESTINO}?text=${encodeURIComponent(mensaje)}`;
-            window.open(url, '_blank');
+            msg += `\n💰 *TOTAL:* $ ${total} UYU\n\n⏳ Estado: Pendiente`;
+            window.open(`https://wa.me/${TELEFONO_DESTINO}?text=${encodeURIComponent(msg)}`, '_blank');
         }
 
-        // Confirmar pago y registrar pedido
+        // Confirmar pedido
         botonConfirmar.onclick = () => {
-            if (carrito.length === 0) return alert('El carrito está vacío');
-
+            if (!carrito.length) return alert('Carrito vacío');
             const codigo = generarCodigo();
-            const total = carrito.reduce((sum, i) => sum + i.precio, 0);
+            const total = carrito.reduce((s, i) => s + i.precio, 0);
             const metodoPago = document.querySelector('input[name="metodoPago"]:checked').value;
-            const datosComprador = carrito[0].comprador;
-            const primerItem = carrito[0];
-
-            // Registrar pedido para seguimiento
+            const compr = carrito[0].comprador;
             pedidos.push({
                 codigo,
                 estado: 'Pendiente',
-                paquete: primerItem.paqueteNombre,
-                destino: `+53 ${primerItem.numero} (${primerItem.nombre})`,
+                paquete: carrito.map(i => i.paqueteNombre).join(' + '),
+                destino: carrito.map(i => `+53 ${i.numero}`).join(' / '),
                 metodoPago,
                 fecha: new Date().toLocaleString('es-UY'),
-                mensaje: 'Esperando confirmación de pago. Una vez acreditado, la recarga se envía en ~30 minutos.'
+                cliente: compr.nombre,
+                celularCliente: compr.celular,
+                mensaje: 'Esperando confirmación de pago. Una vez acreditado, la recarga se procesa en ~30 min.'
             });
-
-            enviarWhatsApp({
-                codigo,
-                compradorNombre: datosComprador.nombre,
-                compradorEmail: datosComprador.email,
-                compradorCelular: datosComprador.celular
-            });
-
-            alert(`✅ ¡PEDIDO CONFIRMADO!\n\n📋 Código: ${codigo}\n💰 Total: $ ${total} UYU\n💳 Pago: ${metodoPago}\n\nGuarda tu código para hacer seguimiento.\n¡Gracias por confiar en nosotros! 🇺🇾🇨🇺`);
-
-            carrito = [];
-            actualizarCarrito();
-            toggleCarrito(false);
+            enviarWhatsApp({codigo, nombre: compr.nombre, email: compr.email, celular: compr.celular}, total, metodoPago);
+            alert(`✅ ¡PEDIDO CONFIRMADO!\n\n📋 Código: ${codigo}\n💰 Total: $ ${total} UYU\n💳 Pago: ${metodoPago}\n\nGuardá tu código. Gracias! 🇺🇾🇨🇺`);
+            carrito = []; actualizarCarrito(); toggleCarrito(false);
+            actualizarPanelAdmin();
         };
 
-        // 🔍 Buscar pedido por código
+        // 🔐 Acceso Admin
+        btnAdmin.onclick = () => modalAcceso.classList.remove('hidden');
+        cerrarAcceso.onclick = () => modalAcceso.classList.add('hidden');
+        formAcceso.onsubmit = (e) => {
+            e.preventDefault();
+            if (document.getElementById('claveAdmin').value === CONTRASEÑA_ADMIN) {
+                modalAcceso.classList.add('hidden');
+                panelAdmin.classList.remove('hidden');
+                actualizarPanelAdmin();
+                document.getElementById('claveAdmin').value = '';
+            } else {
+                document.getElementById('errorAcceso').classList.remove('hidden');
+            }
+        };
+        cerrarAdmin.onclick = () => panelAdmin.classList.add('hidden');
+        btnVaciar.onclick = () => { if (confirm('¿Borrar todos los pedidos?')) { pedidos = []; actualizarPanelAdmin(); } };
+
+        // ⚙️ Actualizar Panel Admin
+        function actualizarPanelAdmin() {
+            document.getElementById('cantPendientes').textContent = pedidos.filter(p => p.estado === 'Pendiente').length;
+            document.getElementById('cantConfirmados').textContent = pedidos.filter(p => p.estado === 'Confirmado').length;
+            document.getElementById('cantEnviados').textContent = pedidos.filter(p => p.estado === 'Enviado').length;
+            
+            if (!pedidos.length) {
+                listaPedidos.innerHTML = `<tr id="sinPedidos"><td colspan="7" class="p-8 text-center text-gray-400">Todavía no hay pedidos.</td></tr>`;
+                return;
+            }
+            
+            listaPedidos.innerHTML = pedidos.map(p => `
+                <tr class="fila-pedido border-t">
+                    <td class="p-3 font-mono text-primary font-bold">${p.codigo}</td>
+                    <td class="p-3">${p.cliente}<br><span class="text-xs text-gray-400">${p.celularCliente}</span></td>
+                    <td class="p-3 text-sm">${p.destino}</td>
+                    <td class="p-3 text-sm">${p.paquete}</td>
+                    <td class="p-3 text-sm">${p.metodoPago}</td>
+                    <td class="p-3">
+                        <span class="px-2 py-1 rounded-full text-xs font-medium ${
+                            p.estado==='Pendiente'?'estado-pendiente':p.estado==='Confirmado'?'estado-confirmado':'estado-enviado'
+                        }">${p.estado}</span>
+                    </td>
+                    <td class="p-3 text-center whitespace-nowrap">
+                        <button class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded mb-1 hover:bg-yellow-200" onclick="cambiarEstado('${p.codigo}','Pendiente')">🟡</button>
+                        <button class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded mb-1 hover:bg-green-200" onclick="cambiarEstado('${p.codigo}','Confirmado')">✅</button>
+                        <button class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded mb-1 hover:bg-indigo-200" onclick="cambiarEstado('${p.codigo}','Enviado')">🚀</button>
+                        <button class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded hover:bg-red-200" onclick="eliminarPedido('${p.codigo}')">🗑️</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Cambiar estado
+        window.cambiarEstado = function(codigo, nuevoEstado) {
+            const p = pedidos.find(x => x.codigo === codigo);
+            if (!p) return;
+            p.estado = nuevoEstado;
+            if (nuevoEstado === 'Confirmado') {
+                p.mensaje = '✅ Pago confirmado. Estamos procesando la recarga. Llegará en ~30 minutos.';
+            } else if (nuevoEstado === 'Enviado') {
+                p.mensaje = '🚀 ¡Recarga acreditada! Saldo y datos disponibles en el número destino.';
+            } else {
+                p.mensaje = '⏳ Esperando confirmación de pago. Una vez acreditado, se procesará en ~30 min.';
+            }
+            actualizarPanelAdmin();
+            alert(`Estado de ${codigo} → ${nuevoEstado}`);
+        };
+
+        // Eliminar pedido
+        window.eliminarPedido = function(codigo) {
+            if (confirm(`¿Eliminar ${codigo}?`)) {
+                pedidos = pedidos.filter(x => x.codigo !== codigo);
+                actualizarPanelAdmin();
+            }
+        };
+
+        // 🔍 Seguimiento
         formSeguimiento.onsubmit = (e) => {
             e.preventDefault();
-            const codigo = document.getElementById('codigoSeguimiento').value.trim().toUpperCase();
-            
+            const cod = document.getElementById('codigoSeguimiento').value.trim().toUpperCase();
             resultadoSeguimiento.classList.remove('hidden');
             pedidoEncontrado.classList.add('hidden');
             pedidoNoEncontrado.classList.add('hidden');
-
-            const pedido = pedidos.find(p => p.codigo === codigo);
-
-            if (pedido) {
+            const p = pedidos.find(x => x.codigo === cod);
+            if (p) {
                 pedidoEncontrado.classList.remove('hidden');
-                
-                document.getElementById('resCodigo').textContent = pedido.codigo;
-                document.getElementById('resPaquete').textContent = pedido.paquete;
-                document.getElementById('resDestino').textContent = pedido.destino;
-                document.getElementById('resMetodoPago').textContent = pedido.metodoPago;
-                document.getElementById('resFecha').textContent = pedido.fecha;
-                document.getElementById('resMensaje').textContent = pedido.mensaje;
-                
-                // Estado con color
-                const estadoEl = document.getElementById('resEstado');
-                estadoEl.textContent = pedido.estado;
-                estadoEl.className = 'px-3 py-1 rounded-full text-sm font-medium';
-                
-                if (pedido.estado === 'Pendiente') {
-                    estadoEl.classList.add('estado-pendiente');
-                } else if (pedido.estado === 'Confirmado') {
-                    estadoEl.classList.add('estado-confirmado');
-                } else if (pedido.estado === 'Enviado') {
-                    estadoEl.classList.add('estado-enviado');
-                }
+                document.getElementById('resCodigo').textContent = p.codigo;
+                document.getElementById('resPaquete').textContent = p.paquete;
+                document.getElementById('resDestino').textContent = p.destino;
+                document.getElementById('resMetodoPago').textContent = p.metodoPago;
+                document.getElementById('resFecha').textContent = p.fecha;
+                document.getElementById('resMensaje').textContent = p.mensaje;
+                const est = document.getElementById('resEstado');
+                est.textContent = p.estado;
+                est.className = 'px-3 py-1 rounded-full text-sm font-medium ' +
+                    (p.estado==='Pendiente'?'estado-pendiente':p.estado==='Confirmado'?'estado-confirmado':'estado-enviado');
             } else {
                 pedidoNoEncontrado.classList.remove('hidden');
             }

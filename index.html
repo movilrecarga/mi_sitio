@@ -35,6 +35,13 @@
         .oculto { display: none !important; }
         .fila-pedido:hover { background-color: #F9FAFB; }
         .guardado-indicador { transition: opacity 0.3s; }
+        .cuenta-box { background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 0.5rem; padding: 0.75rem; margin-top: 0.5rem; }
+        .copiado-ok { animation: fadeOut 2s forwards; }
+        @keyframes fadeOut {
+            0% { opacity: 1; }
+            70% { opacity: 1; }
+            100% { opacity: 0; }
+        }
     </style>
 </head>
 <body class="text-dark bg-white">
@@ -164,13 +171,30 @@
                 <div id="seccionPago" class="hidden mt-6">
                     <h3 class="font-semibold text-lg mb-3">💳 Método de Pago</h3>
                     <div class="space-y-3">
+                        <!-- PREX con cuenta y botón copiar -->
                         <label class="metodo-label block border-2 rounded-xl p-3" id="pago-prex">
                             <input type="radio" name="metodoPago" value="Prex" checked>
                             <div class="flex items-center gap-3">
                                 <span class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600"><i class="fa fa-bolt"></i></span>
-                                <div><div class="font-medium">Prex</div><div class="text-xs text-gray-500">Pago al instante</div></div>
+                                <div class="flex-1">
+                                    <div class="font-medium">Prex</div>
+                                    <div class="text-xs text-gray-500">Pago al instante</div>
+                                </div>
+                            </div>
+                            <!-- Tu número de cuenta con botón copiar -->
+                            <div id="prex-cuenta" class="cuenta-box oculto">
+                                <p class="text-sm text-gray-600 mb-2">Transferí a esta cuenta:</p>
+                                <div class="flex items-center gap-2">
+                                    <code id="prex-numero" class="flex-1 bg-white px-3 py-2 rounded border font-mono font-bold text-lg text-center">23963440</code>
+                                    <button id="btnCopiarPrex" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg whitespace-nowrap">
+                                        <i class="fa fa-copy"></i> Copiar
+                                    </button>
+                                </div>
+                                <p id="mensajeCopiado" class="text-green-600 text-sm mt-1 hidden">✅ ¡Copiado!</p>
+                                <p class="text-xs text-gray-500 mt-2">Luego confirmá y te llegará el código por WhatsApp</p>
                             </div>
                         </label>
+
                         <label class="metodo-label block border-2 rounded-xl p-3" id="pago-midinero">
                             <input type="radio" name="metodoPago" value="Mi Dinero">
                             <div class="flex items-center gap-3">
@@ -339,20 +363,20 @@
         </div>
     </footer>
 
-    <!-- LÓGICA COMPLETA + BASE DE DATOS PERMANENTE -->
+    <!-- LÓGICA COMPLETA + BASE DE DATOS + BOTÓN COPIAR -->
     <script>
         // ⚙️ CONFIGURACIÓN
         const CONTRASEÑA_ADMIN = 'admin123'; // ← Cambiá tu contraseña acá
         const TELEFONO_DESTINO = '59896038426'; // Tu WhatsApp
-        const BD_NOMBRE = 'recargas_cuba_pedidos'; // No tocar
+        const BD_NOMBRE = 'recargas_cuba_pedidos';
+        const CUENTA_PREX = '23963440'; // Tu número de cuenta Prex
 
         let carrito = [];
         let pedidos = [];
 
-        // 🔧 BASE DE DATOS PERMANENTE (LocalStorage)
+        // 🔧 BASE DE DATOS PERMANENTE
         function bdGuardar() {
             localStorage.setItem(BD_NOMBRE, JSON.stringify(pedidos));
-            // Mostrar indicador de guardado
             const indicador = document.getElementById('indicadorGuardado');
             if (indicador) {
                 indicador.classList.remove('opacity-0');
@@ -363,15 +387,9 @@
         function bdCargar() {
             const datos = localStorage.getItem(BD_NOMBRE);
             if (datos) {
-                try {
-                    pedidos = JSON.parse(datos);
-                } catch (e) {
-                    pedidos = [];
-                }
+                try { pedidos = JSON.parse(datos); } catch (e) { pedidos = []; }
             }
         }
-
-        // Cargar datos al abrir la página
         bdCargar();
 
         // Elementos
@@ -388,9 +406,6 @@
         const totalCarrito = document.getElementById('totalCarrito');
         const botonConfirmar = document.getElementById('botonConfirmar');
         const formSeguimiento = document.getElementById('formSeguimiento');
-        const resultadoSeguimiento = document.getElementById('resultadoSeguimiento');
-        const pedidoEncontrado = document.getElementById('pedidoEncontrado');
-        const pedidoNoEncontrado = document.getElementById('pedidoNoEncontrado');
         const btnAdmin = document.getElementById('btnAdmin');
         const modalAcceso = document.getElementById('modalAcceso');
         const formAcceso = document.getElementById('formAcceso');
@@ -400,6 +415,49 @@
         const btnVaciar = document.getElementById('btnVaciar');
         const btnExportar = document.getElementById('btnExportar');
         const listaPedidos = document.getElementById('listaPedidos');
+        const prexCuenta = document.getElementById('prex-cuenta');
+        const btnCopiarPrex = document.getElementById('btnCopiarPrex');
+        const mensajeCopiado = document.getElementById('mensajeCopiado');
+
+        // 📋 Mostrar/ocultar cuenta Prex al elegir el método
+        document.querySelectorAll('input[name="metodoPago"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                document.querySelectorAll('[id^="pago-"]').forEach(lbl => lbl.classList.remove('card-selected'));
+                radio.closest('label').classList.add('card-selected');
+                // Mostrar cuenta solo si elige Prex
+                if (radio.value === 'Prex') {
+                    prexCuenta.classList.remove('oculto');
+                } else {
+                    prexCuenta.classList.add('oculto');
+                }
+            });
+            if (radio.checked) {
+                radio.closest('label').classList.add('card-selected');
+                if (radio.value === 'Prex') prexCuenta.classList.remove('oculto');
+            }
+        });
+
+        // 📋 Botón Copiar cuenta Prex
+        btnCopiarPrex.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(CUENTA_PREX);
+                mensajeCopiado.classList.remove('hidden');
+                btnCopiarPrex.innerHTML = '<i class="fa fa-check"></i> Copiado';
+                setTimeout(() => {
+                    mensajeCopiado.classList.add('hidden');
+                    btnCopiarPrex.innerHTML = '<i class="fa fa-copy"></i> Copiar';
+                }, 2500);
+            } catch (err) {
+                // Respaldo si el navegador no soporta clipboard
+                const input = document.createElement('input');
+                input.value = CUENTA_PREX;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                alert(`Copiado: ${CUENTA_PREX}`);
+            }
+        });
 
         // Selección visual paquetes
         document.querySelectorAll('.paquete-option input').forEach(input => {
@@ -408,15 +466,6 @@
                 input.closest('.paquete-option').classList.add('card-selected');
             });
             if (input.checked) input.closest('.paquete-option').classList.add('card-selected');
-        });
-
-        // Selección visual método pago
-        document.querySelectorAll('input[name="metodoPago"]').forEach(radio => {
-            radio.addEventListener('change', () => {
-                document.querySelectorAll('[id^="pago-"]').forEach(lbl => lbl.classList.remove('card-selected'));
-                radio.closest('label').classList.add('card-selected');
-            });
-            if (radio.checked) radio.closest('label').classList.add('card-selected');
         });
 
         // Abrir/cerrar carrito
@@ -433,7 +482,6 @@
             const letras = Math.random().toString(36).substring(2, 5).toUpperCase();
             const numeros = Math.floor(Math.random() * 900 + 100);
             const codigo = `${prefijo}${letras}${numeros}`;
-            // Evitar duplicados
             if (pedidos.some(p => p.codigo === codigo)) return generarCodigo();
             return codigo;
         }
@@ -498,7 +546,7 @@
             window.open(`https://wa.me/${TELEFONO_DESTINO}?text=${encodeURIComponent(msg)}`, '_blank');
         }
 
-        // Confirmar pedido → GUARDAR EN BASE DE DATOS
+        // Confirmar pedido → GUARDAR EN BD
         botonConfirmar.onclick = () => {
             if (!carrito.length) return alert('Carrito vacío');
             const codigo = generarCodigo();
@@ -506,8 +554,7 @@
             const metodoPago = document.querySelector('input[name="metodoPago"]:checked').value;
             const compr = carrito[0].comprador;
             
-            // Guardar en base de datos permanente
-            pedidos.unshift({ // Agregar al principio (más reciente primero)
+            pedidos.unshift({
                 codigo,
                 estado: 'Pendiente',
                 paquete: carrito.map(i => i.paqueteNombre).join(' + '),
@@ -518,13 +565,15 @@
                 cliente: compr.nombre,
                 emailCliente: compr.email,
                 celularCliente: compr.celular,
-                mensaje: '⏳ Esperando confirmación de pago. Una vez acreditado, la recarga se procesa en aproximadamente 30 minutos.'
+                mensaje: metodoPago === 'Prex' 
+                    ? `⏳ Esperando tu transferencia a la cuenta Prex: ${CUENTA_PREX}. Una vez acreditada, procesaremos la recarga en ~30 min.`
+                    : '⏳ Esperando confirmación de pago. Una vez acreditado, la recarga se procesa en ~30 min.'
             });
             
-            bdGuardar(); // Guardar permanentemente
+            bdGuardar();
             enviarWhatsApp({codigo, nombre: compr.nombre, email: compr.email, celular: compr.celular}, total, metodoPago);
             
-            alert(`✅ ¡PEDIDO CONFIRMADO!\n\n📋 Código: ${codigo}\n💰 Total: $ ${total} UYU\n💳 Pago: ${metodoPago}\n\nGuardá tu código para seguimiento.\nGracias por confiar en nosotros! 🇺🇾🇨🇺`);
+            alert(`✅ ¡PEDIDO CONFIRMADO!\n\n📋 Código: ${codigo}\n💰 Total: $ ${total} UYU\n💳 Pago: ${metodoPago}${metodoPago==='Prex'?`\n🏦 Cuenta: ${CUENTA_PREX}`:''}\n\nGuardá tu código. Gracias! 🇺🇾🇨🇺`);
             
             carrito = []; actualizarCarrito(); toggleCarrito(false);
             actualizarPanelAdmin();
@@ -547,10 +596,8 @@
         cerrarAdmin.onclick = () => panelAdmin.classList.add('hidden');
         
         btnVaciar.onclick = () => {
-            if (confirm('⚠️ ¿Borrar TODOS los pedidos? Esta acción no se puede deshacer.')) {
-                pedidos = [];
-                bdGuardar();
-                actualizarPanelAdmin();
+            if (confirm('⚠️ ¿Borrar TODOS los pedidos? No se puede deshacer.')) {
+                pedidos = []; bdGuardar(); actualizarPanelAdmin();
             }
         };
         
@@ -583,21 +630,13 @@
             listaPedidos.innerHTML = pedidos.map(p => `
                 <tr class="fila-pedido border-t">
                     <td class="p-3 font-mono text-primary font-bold text-xs">${p.codigo}</td>
-                    <td class="p-3 text-sm">
-                        <div class="font-medium">${p.cliente}</div>
-                        <div class="text-xs text-gray-400">${p.celularCliente}</div>
-                    </td>
+                    <td class="p-3 text-sm"><div class="font-medium">${p.cliente}</div><div class="text-xs text-gray-400">${p.celularCliente}</div></td>
                     <td class="p-3 text-sm">${p.destino}</td>
-                    <td class="p-3 text-sm">
-                        <div>${p.paquete}</div>
-                        <div class="font-bold text-primary">$ ${p.total} UYU</div>
-                    </td>
+                    <td class="p-3 text-sm"><div>${p.paquete}</div><div class="font-bold text-primary">$ ${p.total} UYU</div></td>
                     <td class="p-3 text-sm">${p.metodoPago}</td>
-                    <td class="p-3">
-                        <span class="px-2 py-1 rounded-full text-xs font-medium ${
-                            p.estado==='Pendiente'?'estado-pendiente':p.estado==='Confirmado'?'estado-confirmado':'estado-enviado'
-                        }">${p.estado}</span>
-                    </td>
+                    <td class="p-3"><span class="px-2 py-1 rounded-full text-xs font-medium ${
+                        p.estado==='Pendiente'?'estado-pendiente':p.estado==='Confirmado'?'estado-confirmado':'estado-enviado'
+                    }">${p.estado}</span></td>
                     <td class="p-3 text-xs text-gray-500 whitespace-nowrap">${p.fecha}</td>
                     <td class="p-3 text-center whitespace-nowrap">
                         <button class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded mb-1 hover:bg-yellow-200" title="Pendiente" onclick="cambiarEstado('${p.codigo}','Pendiente')">🟡</button>
@@ -616,31 +655,37 @@
             p.estado = nuevoEstado;
             
             if (nuevoEstado === 'Confirmado') {
-                p.mensaje = '✅ Pago confirmado. Estamos procesando la recarga. Llegará en aproximadamente 30 minutos.';
+                p.mensaje = '✅ Pago confirmado. Estamos procesando la recarga. Llegará en ~30 minutos.';
             } else if (nuevoEstado === 'Enviado') {
                 p.mensaje = '🚀 ¡Recarga acreditada! Saldo y datos ya disponibles en el número destino.';
             } else {
-                p.mensaje = '⏳ Esperando confirmación de pago. Una vez acreditado, se procesará en ~30 minutos.';
+                p.mensaje = p.metodoPago === 'Prex'
+                    ? `⏳ Esperando tu transferencia a la cuenta Prex: ${CUENTA_PREX}. Una vez acreditada, se procesará en ~30 min.`
+                    : '⏳ Esperando confirmación de pago. Una vez acreditado, se procesará en ~30 min.';
             }
             
-            bdGuardar(); // Guardar cambio permanentemente
+            bdGuardar();
             actualizarPanelAdmin();
             alert(`✅ Estado actualizado:\n${codigo} → ${nuevoEstado}`);
         };
 
         // Eliminar pedido + GUARDAR
         window.eliminarPedido = function(codigo) {
-            if (confirm(`¿Eliminar ${codigo}? Esta acción no se puede deshacer.`)) {
+            if (confirm(`¿Eliminar ${codigo}? No se puede deshacer.`)) {
                 pedidos = pedidos.filter(x => x.codigo !== codigo);
                 bdGuardar();
                 actualizarPanelAdmin();
             }
         };
 
-        // 🔍 Seguimiento (lee desde base de datos)
+        // 🔍 Seguimiento
         formSeguimiento.onsubmit = (e) => {
             e.preventDefault();
             const cod = document.getElementById('codigoSeguimiento').value.trim().toUpperCase();
+            const resultadoSeguimiento = document.getElementById('resultadoSeguimiento');
+            const pedidoEncontrado = document.getElementById('pedidoEncontrado');
+            const pedidoNoEncontrado = document.getElementById('pedidoNoEncontrado');
+            
             resultadoSeguimiento.classList.remove('hidden');
             pedidoEncontrado.classList.add('hidden');
             pedidoNoEncontrado.classList.add('hidden');

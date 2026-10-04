@@ -37,12 +37,6 @@
         .guardado-indicador { transition: opacity 0.3s; }
         .cuenta-box { background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 0.5rem; padding: 0.75rem; margin-top: 0.5rem; }
         .cuenta-box-azul { background: #EFF6FF; border: 1px solid #BFDBFE; }
-        .copiado-ok { animation: fadeOut 2s forwards; }
-        @keyframes fadeOut {
-            0% { opacity: 1; }
-            70% { opacity: 1; }
-            100% { opacity: 0; }
-        }
     </style>
 </head>
 <body class="text-dark bg-white">
@@ -184,6 +178,7 @@
                             </div>
                             <div id="prex-cuenta" class="cuenta-box oculto">
                                 <p class="text-sm text-gray-600 mb-2">Transferí a esta cuenta:</p>
+                                <p class="text-sm font-medium mb-1">Titular: Julio Cesar Ruiz Peña</p>
                                 <div class="flex items-center gap-2">
                                     <code id="prex-numero" class="flex-1 bg-white px-3 py-2 rounded border font-mono font-bold text-lg text-center">23963440</code>
                                     <button id="btnCopiarPrex" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg whitespace-nowrap">
@@ -195,7 +190,7 @@
                             </div>
                         </label>
 
-                        <!-- MI DINERO con datos completos y botón copiar -->
+                        <!-- MI DINERO con cuenta, titular y botón copiar -->
                         <label class="metodo-label block border-2 rounded-xl p-3" id="pago-midinero">
                             <input type="radio" name="metodoPago" value="Mi Dinero">
                             <div class="flex items-center gap-3">
@@ -207,20 +202,12 @@
                             </div>
                             <div id="midinero-cuenta" class="cuenta-box cuenta-box-azul oculto">
                                 <p class="text-sm text-gray-600 mb-2">Transferí a esta cuenta:</p>
-                                <div class="space-y-2">
-                                    <div>
-                                        <p class="text-xs text-gray-500">Cuenta Nº:</p>
-                                        <div class="flex items-center gap-2">
-                                            <code id="midinero-numero" class="flex-1 bg-white px-3 py-2 rounded border font-mono font-bold text-lg text-center">3701762840</code>
-                                            <button id="btnCopiarMiDinero" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg whitespace-nowrap">
-                                                <i class="fa fa-copy"></i> Copiar
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs text-gray-500">Titular:</p>
-                                        <p class="font-medium">Julio Cesar Ruiz Peña</p>
-                                    </div>
+                                <p class="text-sm font-medium mb-1">Titular: Julio Cesar Ruiz Peña</p>
+                                <div class="flex items-center gap-2">
+                                    <code id="midinero-numero" class="flex-1 bg-white px-3 py-2 rounded border font-mono font-bold text-lg text-center">3701762840</code>
+                                    <button id="btnCopiarMiDinero" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg whitespace-nowrap">
+                                        <i class="fa fa-copy"></i> Copiar
+                                    </button>
                                 </div>
                                 <p id="mensajeCopiadoMiDinero" class="text-blue-600 text-sm mt-1 hidden">✅ ¡Copiado!</p>
                                 <p class="text-xs text-gray-500 mt-2">Luego confirmá y te llegará el código por WhatsApp</p>
@@ -394,9 +381,11 @@
         const CONTRASEÑA_ADMIN = 'admin123';
         const TELEFONO_DESTINO = '59896038426';
         const BD_NOMBRE = 'recargas_cuba_pedidos';
+        
+        // Tus cuentas
         const CUENTA_PREX = '23963440';
         const CUENTA_MIDINERO = '3701762840';
-        const TITULAR_MIDINERO = 'Julio Cesar Ruiz Peña';
+        const TITULAR = 'Julio Cesar Ruiz Peña';
 
         let carrito = [];
         let pedidos = [];
@@ -443,27 +432,32 @@
         const btnExportar = document.getElementById('btnExportar');
         const listaPedidos = document.getElementById('listaPedidos');
         const prexCuenta = document.getElementById('prex-cuenta');
-        const btnCopiarPrex = document.getElementById('btnCopiarPrex');
-        const mensajeCopiadoPrex = document.getElementById('mensajeCopiadoPrex');
         const midineroCuenta = document.getElementById('midinero-cuenta');
+        const btnCopiarPrex = document.getElementById('btnCopiarPrex');
         const btnCopiarMiDinero = document.getElementById('btnCopiarMiDinero');
+        const mensajeCopiadoPrex = document.getElementById('mensajeCopiadoPrex');
         const mensajeCopiadoMiDinero = document.getElementById('mensajeCopiadoMiDinero');
 
-        // 📋 Mostrar/ocultar datos según método de pago seleccionado
+        // 📋 Mostrar/ocultar cuenta según método elegido
         document.querySelectorAll('input[name="metodoPago"]').forEach(radio => {
             radio.addEventListener('change', () => {
                 document.querySelectorAll('[id^="pago-"]').forEach(lbl => lbl.classList.remove('card-selected'));
                 radio.closest('label').classList.add('card-selected');
                 
-                // Mostrar/ocultar Prex
-                prexCuenta.classList.toggle('oculto', radio.value !== 'Prex');
-                // Mostrar/ocultar Mi Dinero
-                midineroCuenta.classList.toggle('oculto', radio.value !== 'Mi Dinero');
+                // Mostrar cuenta correspondiente
+                prexCuenta.classList.add('oculto');
+                midineroCuenta.classList.add('oculto');
+                
+                if (radio.value === 'Prex') {
+                    prexCuenta.classList.remove('oculto');
+                } else if (radio.value === 'Mi Dinero') {
+                    midineroCuenta.classList.remove('oculto');
+                }
             });
+            
             if (radio.checked) {
                 radio.closest('label').classList.add('card-selected');
-                prexCuenta.classList.toggle('oculto', radio.value !== 'Prex');
-                midineroCuenta.classList.toggle('oculto', radio.value !== 'Mi Dinero');
+                prexCuenta.classList.remove('oculto'); // Prex viene seleccionado por defecto
             }
         });
 
@@ -606,9 +600,9 @@
             
             let mensajePago = '⏳ Esperando confirmación de pago. Una vez acreditado, se procesará en ~30 min.';
             if (metodoPago === 'Prex') {
-                mensajePago = `⏳ Esperando tu transferencia a la cuenta Prex: ${CUENTA_PREX}. Una vez acreditada, procesaremos la recarga en ~30 min.`;
+                mensajePago = `⏳ Esperando tu transferencia a Prex: ${CUENTA_PREX} — Titular: ${TITULAR}. Una vez acreditada, se procesará en ~30 min.`;
             } else if (metodoPago === 'Mi Dinero') {
-                mensajePago = `⏳ Esperando tu transferencia a Mi Dinero — Cuenta Nº: ${CUENTA_MIDINERO} — Titular: ${TITULAR_MIDINERO}. Una vez acreditada, procesaremos la recarga en ~30 min.`;
+                mensajePago = `⏳ Esperando tu transferencia a Mi Dinero: ${CUENTA_MIDINERO} — Titular: ${TITULAR}. Una vez acreditada, se procesará en ~30 min.`;
             }
             
             pedidos.unshift({
@@ -628,11 +622,11 @@
             bdGuardar();
             enviarWhatsApp({codigo, nombre: compr.nombre, email: compr.email, celular: compr.celular}, total, metodoPago);
             
-            let datosPago = '';
-            if (metodoPago === 'Prex') datosPago = `\n🏦 Cuenta Prex: ${CUENTA_PREX}`;
-            if (metodoPago === 'Mi Dinero') datosPago = `\n🏦 Cuenta: ${CUENTA_MIDINERO}\n👤 Titular: ${TITULAR_MIDINERO}`;
+            let cuentaInfo = '';
+            if (metodoPago === 'Prex') cuentaInfo = `\n🏦 Prex: ${CUENTA_PREX}`;
+            if (metodoPago === 'Mi Dinero') cuentaInfo = `\n🏦 Mi Dinero: ${CUENTA_MIDINERO}`;
             
-            alert(`✅ ¡PEDIDO CONFIRMADO!\n\n📋 Código: ${codigo}\n💰 Total: $ ${total} UYU\n💳 Pago: ${metodoPago}${datosPago}\n\nGuardá tu código. Gracias! 🇺🇾🇨🇺`);
+            alert(`✅ ¡PEDIDO CONFIRMADO!\n\n📋 Código: ${codigo}\n💰 Total: $ ${total} UYU\n💳 Pago: ${metodoPago}${cuentaInfo}\n👤 Titular: ${TITULAR}\n\nGuardá tu código. Gracias! 🇺🇾🇨🇺`);
             
             carrito = []; actualizarCarrito(); toggleCarrito(false);
             actualizarPanelAdmin();
@@ -703,3 +697,15 @@
                         <button class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded mb-1 hover:bg-indigo-200" title="Enviado" onclick="cambiarEstado('${p.codigo}','Enviado')">🚀</button>
                         <button class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded hover:bg-red-200" title="Eliminar" onclick="eliminarPedido('${p.codigo}')">🗑️</button>
                     </td>
+                </tr>
+            `).join('');
+        }
+
+        // Cambiar estado + GUARDAR
+        window.cambiarEstado = function(codigo, nuevoEstado) {
+            const p = pedidos.find(x => x.codigo === codigo);
+            if (!p) return;
+            p.estado = nuevoEstado;
+            
+            if (nuevoEstado === 'Confirmado') {
+                p.mensaje = '✅ Pago confirmado. Estamos procesando la recarga. Llegará en ~30 minutos.';

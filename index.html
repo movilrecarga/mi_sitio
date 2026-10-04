@@ -30,6 +30,9 @@
         }
         input[type="radio"] { display: none; }
         .metodo-label { cursor: pointer; transition: all 0.2s; }
+        .estado-pendiente { background-color: #FEF3C7; color: #92400E; }
+        .estado-confirmado { background-color: #D1FAE5; color: #065F46; }
+        .estado-enviado { background-color: #E0E7FF; color: #3730A3; }
     </style>
 </head>
 <body class="text-dark bg-white">
@@ -37,7 +40,8 @@
     <nav class="sticky top-0 bg-white shadow-sm z-50">
         <div class="max-w-7xl mx-auto px-4 flex justify-between items-center py-4">
             <a href="#" class="text-2xl font-bold text-primary">Recargas Cuba UY</a>
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-6">
+                <a href="#seguimiento" class="hidden md:inline hover:text-primary font-medium">Seguir Pedido</a>
                 <a href="#como-funciona" class="hidden md:inline hover:text-primary">Cómo funciona</a>
                 <button id="abrirCarrito" class="relative p-2 hover:bg-gray-100 rounded-full">
                     <i class="fa fa-shopping-cart text-lg"></i>
@@ -65,56 +69,35 @@
                 
                 <div id="listaCarrito" class="space-y-4 hidden"></div>
 
-                <!-- Métodos de Pago (aparece cuando hay items) -->
                 <div id="seccionPago" class="hidden mt-6">
                     <h3 class="font-semibold text-lg mb-3">💳 Método de Pago</h3>
                     <div class="space-y-3">
                         <label class="metodo-label block border-2 rounded-xl p-3" id="pago-prex">
                             <input type="radio" name="metodoPago" value="Prex" checked>
                             <div class="flex items-center gap-3">
-                                <span class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-                                    <i class="fa fa-bolt"></i>
-                                </span>
-                                <div>
-                                    <div class="font-medium">Prex</div>
-                                    <div class="text-xs text-gray-500">Pago al instante</div>
-                                </div>
+                                <span class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600"><i class="fa fa-bolt"></i></span>
+                                <div><div class="font-medium">Prex</div><div class="text-xs text-gray-500">Pago al instante</div></div>
                             </div>
                         </label>
                         <label class="metodo-label block border-2 rounded-xl p-3" id="pago-midinero">
                             <input type="radio" name="metodoPago" value="Mi Dinero">
                             <div class="flex items-center gap-3">
-                                <span class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                                    <i class="fa fa-money"></i>
-                                </span>
-                                <div>
-                                    <div class="font-medium">Mi Dinero</div>
-                                    <div class="text-xs text-gray-500">Pago con cuenta o tarjeta</div>
-                                </div>
+                                <span class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600"><i class="fa fa-money"></i></span>
+                                <div><div class="font-medium">Mi Dinero</div><div class="text-xs text-gray-500">Cuenta o tarjeta</div></div>
                             </div>
                         </label>
                         <label class="metodo-label block border-2 rounded-xl p-3" id="pago-brou">
                             <input type="radio" name="metodoPago" value="BROU">
                             <div class="flex items-center gap-3">
-                                <span class="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
-                                    <i class="fa fa-university"></i>
-                                </span>
-                                <div>
-                                    <div class="font-medium">Transferencia BROU</div>
-                                    <div class="text-xs text-gray-500">Desde cualquier banco</div>
-                                </div>
+                                <span class="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600"><i class="fa fa-university"></i></span>
+                                <div><div class="font-medium">Transferencia BROU</div><div class="text-xs text-gray-500">Desde cualquier banco</div></div>
                             </div>
                         </label>
                         <label class="metodo-label block border-2 rounded-xl p-3" id="pago-efectivo">
                             <input type="radio" name="metodoPago" value="Abitab / RedPagos">
                             <div class="flex items-center gap-3">
-                                <span class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
-                                    <i class="fa fa-building"></i>
-                                </span>
-                                <div>
-                                    <div class="font-medium">Abitab / RedPagos</div>
-                                    <div class="text-xs text-gray-500">En efectivo</div>
-                                </div>
+                                <span class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600"><i class="fa fa-building"></i></span>
+                                <div><div class="font-medium">Abitab / RedPagos</div><div class="text-xs text-gray-500">En efectivo</div></div>
                             </div>
                         </label>
                     </div>
@@ -152,7 +135,6 @@
 
             <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8">
                 <form id="formRecarga" class="space-y-8">
-                    <!-- Paso 1: Número -->
                     <div>
                         <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
                             <span class="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">1</span>
@@ -178,7 +160,6 @@
                         </div>
                     </div>
 
-                    <!-- Paso 2: Paquetes -->
                     <div>
                         <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
                             <span class="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">2</span>
@@ -212,7 +193,6 @@
                         </div>
                     </div>
 
-                    <!-- Paso 3: Datos comprador -->
                     <div>
                         <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
                             <span class="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">3</span>
@@ -246,22 +226,94 @@
         </div>
     </section>
 
+    <!-- 🔍 SECCIÓN DE SEGUIMIENTO -->
+    <section id="seguimiento" class="py-16 bg-gray-50">
+        <div class="max-w-2xl mx-auto px-4">
+            <h2 class="text-2xl font-bold text-center mb-3">🔍 Seguimiento de Pedido</h2>
+            <p class="text-center text-gray-600 mb-8">Ingresá tu código de seguimiento para ver el estado de tu recarga</p>
+            
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+                <form id="formSeguimiento" class="space-y-4">
+                    <div>
+                        <label for="codigoSeguimiento" class="block text-sm font-medium text-gray-700 mb-2">Código de Seguimiento</label>
+                        <div class="flex gap-3">
+                            <input 
+                                type="text" 
+                                id="codigoSeguimiento" 
+                                placeholder="Ej: RC-ABC123" 
+                                class="flex-1 border-2 rounded-lg px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                style="text-transform: uppercase;"
+                            >
+                            <button 
+                                type="submit" 
+                                class="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                            >
+                                <i class="fa fa-search"></i> Buscar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Resultado de la búsqueda -->
+                <div id="resultadoSeguimiento" class="mt-6 hidden">
+                    <div id="pedidoEncontrado" class="hidden">
+                        <div class="border rounded-xl p-5 bg-gray-50 space-y-4">
+                            <div class="flex justify-between items-center">
+                                <span class="font-medium text-gray-600">Código:</span>
+                                <span id="resCodigo" class="font-bold text-lg text-primary"></span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="font-medium text-gray-600">Estado:</span>
+                                <span id="resEstado" class="px-3 py-1 rounded-full text-sm font-medium"></span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="font-medium text-gray-600">Paquete:</span>
+                                <span id="resPaquete"></span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="font-medium text-gray-600">Destino:</span>
+                                <span id="resDestino"></span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="font-medium text-gray-600">Método de pago:</span>
+                                <span id="resMetodoPago"></span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="font-medium text-gray-600">Fecha:</span>
+                                <span id="resFecha"></span>
+                            </div>
+                            <div class="pt-3 border-t text-sm text-gray-600">
+                                <p id="resMensaje"></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="pedidoNoEncontrado" class="text-center py-6 text-gray-500 hidden">
+                        <i class="fa fa-search-minus text-3xl mb-3 text-gray-300"></i>
+                        <p class="font-medium">Código no encontrado</p>
+                        <p class="text-sm mt-1">Verificá que esté bien escrito. Ej: RC-ABC123</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Cómo funciona -->
-    <section id="como-funciona" class="py-16 bg-gray-50">
+    <section id="como-funciona" class="py-16">
         <div class="max-w-5xl mx-auto px-4">
             <h2 class="text-2xl font-bold text-center mb-12">Cómo funciona</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="bg-white p-6 rounded-xl shadow-sm">
+                <div class="bg-gray-50 p-6 rounded-xl">
                     <div class="text-4xl font-bold text-primary/20 mb-2">01</div>
                     <h3 class="font-semibold text-lg mb-2">Agregá al carrito</h3>
                     <p class="text-gray-600">Número + paquete → revisá tu pedido.</p>
                 </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm">
+                <div class="bg-gray-50 p-6 rounded-xl">
                     <div class="text-4xl font-bold text-primary/20 mb-2">02</div>
                     <h3 class="font-semibold text-lg mb-2">Seleccioná pago</h3>
                     <p class="text-gray-600">Prex, Mi Dinero, BROU o Abitab/RedPagos.</p>
                 </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm">
+                <div class="bg-gray-50 p-6 rounded-xl">
                     <div class="text-4xl font-bold text-primary/20 mb-2">03</div>
                     <h3 class="font-semibold text-lg mb-2">¡Confirmado! ✅</h3>
                     <p class="text-gray-600">Código de seguimiento por WhatsApp al instante.</p>
@@ -280,7 +332,8 @@
     <!-- Lógica Completa -->
     <script>
         let carrito = [];
-        const TELEFONO_DESTINO = '59896038426'; // Tu número con código de país
+        let pedidos = []; // Almacén de pedidos para seguimiento
+        const TELEFONO_DESTINO = '59896038426';
 
         // Elementos
         const form = document.getElementById('formRecarga');
@@ -295,6 +348,10 @@
         const pieCarrito = document.getElementById('pieCarrito');
         const totalCarrito = document.getElementById('totalCarrito');
         const botonConfirmar = document.getElementById('botonConfirmar');
+        const formSeguimiento = document.getElementById('formSeguimiento');
+        const resultadoSeguimiento = document.getElementById('resultadoSeguimiento');
+        const pedidoEncontrado = document.getElementById('pedidoEncontrado');
+        const pedidoNoEncontrado = document.getElementById('pedidoNoEncontrado');
 
         // Selección visual de paquetes
         document.querySelectorAll('.paquete-option input').forEach(input => {
@@ -353,7 +410,6 @@
             actualizarCarrito();
             toggleCarrito(true);
             
-            // Resetear formulario
             form.reset();
             document.querySelectorAll('.paquete-option').forEach(el => el.classList.remove('card-selected'));
             document.querySelector('input[name="paquete"][value="estandar"]').checked = true;
@@ -371,7 +427,6 @@
 
             if (carrito.length === 0) return;
 
-            // Renderizar items
             listaCarrito.innerHTML = carrito.map(item => `
                 <div class="border rounded-lg p-4 relative">
                     <button class="absolute top-2 right-2 text-gray-400 hover:text-red-500 text-lg" data-id="${item.id}">&times;</button>
@@ -383,7 +438,6 @@
                 </div>
             `).join('');
 
-            // Eliminar items
             listaCarrito.querySelectorAll('button[data-id]').forEach(btn => {
                 btn.onclick = () => {
                     carrito = carrito.filter(i => i.id !== parseInt(btn.dataset.id));
@@ -391,7 +445,6 @@
                 };
             });
 
-            // Total
             const total = carrito.reduce((sum, i) => sum + i.precio, 0);
             totalCarrito.textContent = `$ ${total}`;
         }
@@ -417,27 +470,33 @@
             });
             
             mensaje += `\n💰 *TOTAL A PAGAR:* $ ${total} UYU\n\n`;
-            mensaje += `⏳ Esperando confirmación de pago...`;
+            mensaje += `⏳ Estado: Pendiente de confirmación de pago`;
 
-            // Codificar para URL
             const url = `https://wa.me/${TELEFONO_DESTINO}?text=${encodeURIComponent(mensaje)}`;
-            
-            // Abrir WhatsApp en nueva pestaña
             window.open(url, '_blank');
         }
 
-        // Confirmar pago
+        // Confirmar pago y registrar pedido
         botonConfirmar.onclick = () => {
             if (carrito.length === 0) return alert('El carrito está vacío');
 
             const codigo = generarCodigo();
             const total = carrito.reduce((sum, i) => sum + i.precio, 0);
             const metodoPago = document.querySelector('input[name="metodoPago"]:checked').value;
-            
-            // Datos del primer comprador (si hay varios, se toma el primero)
             const datosComprador = carrito[0].comprador;
+            const primerItem = carrito[0];
 
-            // Enviar a tu WhatsApp
+            // Registrar pedido para seguimiento
+            pedidos.push({
+                codigo,
+                estado: 'Pendiente',
+                paquete: primerItem.paqueteNombre,
+                destino: `+53 ${primerItem.numero} (${primerItem.nombre})`,
+                metodoPago,
+                fecha: new Date().toLocaleString('es-UY'),
+                mensaje: 'Esperando confirmación de pago. Una vez acreditado, la recarga se envía en ~30 minutos.'
+            });
+
             enviarWhatsApp({
                 codigo,
                 compradorNombre: datosComprador.nombre,
@@ -445,13 +504,49 @@
                 compradorCelular: datosComprador.celular
             });
 
-            // Mensaje al cliente
-            alert(`✅ ¡PEDIDO CONFIRMADO!\n\n📋 Código: ${codigo}\n💰 Total: $ ${total} UYU\n💳 Pago: ${metodoPago}\n\n📲 Se abrió WhatsApp con el detalle.\n¡Gracias por confiar en nosotros! 🇺🇾🇨🇺`);
+            alert(`✅ ¡PEDIDO CONFIRMADO!\n\n📋 Código: ${codigo}\n💰 Total: $ ${total} UYU\n💳 Pago: ${metodoPago}\n\nGuarda tu código para hacer seguimiento.\n¡Gracias por confiar en nosotros! 🇺🇾🇨🇺`);
 
-            // Limpiar carrito
             carrito = [];
             actualizarCarrito();
             toggleCarrito(false);
+        };
+
+        // 🔍 Buscar pedido por código
+        formSeguimiento.onsubmit = (e) => {
+            e.preventDefault();
+            const codigo = document.getElementById('codigoSeguimiento').value.trim().toUpperCase();
+            
+            resultadoSeguimiento.classList.remove('hidden');
+            pedidoEncontrado.classList.add('hidden');
+            pedidoNoEncontrado.classList.add('hidden');
+
+            const pedido = pedidos.find(p => p.codigo === codigo);
+
+            if (pedido) {
+                pedidoEncontrado.classList.remove('hidden');
+                
+                document.getElementById('resCodigo').textContent = pedido.codigo;
+                document.getElementById('resPaquete').textContent = pedido.paquete;
+                document.getElementById('resDestino').textContent = pedido.destino;
+                document.getElementById('resMetodoPago').textContent = pedido.metodoPago;
+                document.getElementById('resFecha').textContent = pedido.fecha;
+                document.getElementById('resMensaje').textContent = pedido.mensaje;
+                
+                // Estado con color
+                const estadoEl = document.getElementById('resEstado');
+                estadoEl.textContent = pedido.estado;
+                estadoEl.className = 'px-3 py-1 rounded-full text-sm font-medium';
+                
+                if (pedido.estado === 'Pendiente') {
+                    estadoEl.classList.add('estado-pendiente');
+                } else if (pedido.estado === 'Confirmado') {
+                    estadoEl.classList.add('estado-confirmado');
+                } else if (pedido.estado === 'Enviado') {
+                    estadoEl.classList.add('estado-enviado');
+                }
+            } else {
+                pedidoNoEncontrado.classList.remove('hidden');
+            }
         };
     </script>
 </body>
